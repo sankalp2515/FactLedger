@@ -1,6 +1,6 @@
 # Full-product execution ledger
 
-Plan: implementation-plan.md plus engineering-review.md. User authorized full implementation on 8 October 2026, including configured local SerpApi/Groq/NVIDIA integrations. Do not repeat design authorization requests. Branding remains [Product Name].
+Plan: implementation-plan.md plus engineering-review.md. User authorized full implementation on 8 October 2026, including configured local SerpApi/Groq/NVIDIA integrations. Do not repeat design authorization requests. Branding remains FactLedger.
 
 ## Execution decisions
 

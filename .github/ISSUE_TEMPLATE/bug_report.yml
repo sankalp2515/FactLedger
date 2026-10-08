@@ -1,0 +1,22 @@
+name: Bug report
+description: Report a reproducible FactLedger defect using synthetic data.
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: No keys, private records or personal data. Report security concerns privately.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Include commit, fixture/live mode, browser and environment.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence
+      description: Safe error codes, request IDs and synthetic screenshots help.

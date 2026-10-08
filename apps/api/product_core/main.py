@@ -23,6 +23,7 @@ from . import schemas, service
 from .auth import Actor, DomainError, actor, dev_login, require_role, seed_development
 from .config import artifact_root, get_settings
 from .db import SessionLocal, init_db
+from .middleware import RequestBodyLimitMiddleware
 from .models import (
     Case,
     Export,
@@ -48,7 +49,7 @@ async def lifespan(app):
     yield
 
 
-app = FastAPI(title="[Product Name] Evidence Workspace", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="FactLedger Evidence Workspace", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.session_secret.get_secret_value(),
@@ -58,6 +59,7 @@ app.add_middleware(
     max_age=8 * 3600,
 )
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts.split(","))
+app.add_middleware(RequestBodyLimitMiddleware)
 rate_windows = defaultdict(deque)
 _actor_dependency = Depends(actor)
 _pdf_upload = File(...)
@@ -69,16 +71,6 @@ async def safe_responses(request: Request, call_next):
     request.state.request_id = request_id
     # Bounded per-process ingress guard; workspace/provider admission is persistent.
     if request.url.path.startswith("/v1"):
-        length = request.headers.get("content-length")
-        if length and (not length.isdigit() or int(length) > 21 * 1024 * 1024):
-            return JSONResponse(
-                {
-                    "code": "PAYLOAD_TOO_LARGE",
-                    "message": "Request exceeds the 20 MB source limit.",
-                    "request_id": request_id,
-                },
-                status_code=413,
-            )
         identity = request.client.host if request.client else "unknown"
         window = rate_windows[identity]
         timestamp = now().timestamp()

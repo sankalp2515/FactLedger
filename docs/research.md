@@ -65,6 +65,6 @@ Grok Bot could provide additional search leads if the user opens it later. Any b
 
 Final problem narrows general public-claim verification to public spending and project-delivery evidence. This is our design inference from source structure and professional verification workflow, not a completed user study. We have not shown that competitors cannot implement this or that customers will pay.
 
-Name screen: exact “Civreniq” and contextual/domain-string searches returned no indexed exact match in performed public searches on 8 October. Registry and domain availability checks are incomplete. [Naming/IP record](naming-and-ip.md) documents limitations. Working brand is finalized for this design; legal exclusivity is not claimed.
+Name screen: exact “FactLedger” and contextual/domain-string searches returned no indexed exact match in performed public searches on 8 October. Registry and domain availability checks are incomplete. [Naming/IP record](naming-and-ip.md) documents limitations. Working brand is finalized for this design; legal exclusivity is not claimed.
 
 Track remains Knowledge & Public Interest. Deadline reconfirmed as 10 October 2026, 23:59 IST. The full design is not silently turned into a smaller hackathon-only scope; readiness requires functioning software and disclosed validation limits.

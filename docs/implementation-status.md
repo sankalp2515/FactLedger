@@ -1,6 +1,6 @@
 # Implemented release and verification record
 
-Verified locally on 8 October 2026. Branding remains **[Product Name]**. This record describes the running implementation; older planning documents describe intended targets and are not evidence that those targets passed.
+Verified locally on 8 October 2026. The final product name is **FactLedger**. This release audit supersedes test counts in this historical implementation record; see [release readiness](release-readiness.md). This record describes the running implementation; older planning documents describe intended targets and are not evidence that those targets passed.
 
 ## Product delivered
 

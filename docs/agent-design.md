@@ -1,4 +1,4 @@
-# Civreniq — AI agent integration and system design
+# FactLedger — AI agent integration and system design
 8 October 2026 · Normative design supplement to PRD and product-system-spec
 
 ## 1. System boundaries

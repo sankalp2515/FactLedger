@@ -5,7 +5,7 @@ import signal
 import threading
 from datetime import UTC, datetime
 
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, text
 
 from product_core.db import SessionLocal, init_db
 from product_core.investigation.executor import execute_run
@@ -14,17 +14,22 @@ from product_core.models import Run
 
 def poll_once() -> int:
     with SessionLocal() as session:
-        rows = session.scalars(
-            select(Run.id)
-            .where(
-                Run.state.in_(["QUEUED", "RUNNING", "PAUSE_REQUESTED", "CANCEL_REQUESTED"]),
-                or_(Run.lease_expires_at.is_(None), Run.lease_expires_at < datetime.now(UTC)),
-            )
-            .order_by(Run.created_at)
-            .limit(10)
-        ).all()
-    for run_id in rows:
-        execute_run(run_id)
+        if session.get_bind().dialect.name == "postgresql":
+            rows = session.execute(
+                text("SELECT run_id, workspace_id FROM public.factledger_due_runs()")
+            ).all()
+        else:
+            rows = session.execute(
+                select(Run.id, Run.workspace_id)
+                .where(
+                    Run.state.in_(["QUEUED", "RUNNING", "PAUSE_REQUESTED", "CANCEL_REQUESTED"]),
+                    or_(Run.lease_expires_at.is_(None), Run.lease_expires_at < datetime.now(UTC)),
+                )
+                .order_by(Run.created_at)
+                .limit(10)
+            ).all()
+    for run_id, workspace_id in rows:
+        execute_run(run_id, workspace_id=workspace_id)
     return len(rows)
 
 

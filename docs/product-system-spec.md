@@ -1,18 +1,18 @@
-# Civreniq: product and system specification
+# FactLedger: product and system specification
 
-Version 1.0 · 8 October 2026 · Proposed for review · No implementation authorized
+Design specification v1.0 · 8 October 2026 · Consult implementation-status.md and release-readiness.md for shipped behavior and verified results.
 
 ### 8 October engineering amendment precedence
 
-Product branding is pending: use **[Product Name]**. Read [engineering-review.md](engineering-review.md) as the proposed replacement contract for the affected sections below. In this review package its explicit contracts take precedence over earlier prose: run-owned progressive results and explicit revision integration (§4); submission/decision separation and supersession on edits (§4); fenced leases and durable job receipts (§4); composite tenant/case/version relationships and MetricObservation (§5); preflight plans, API errors/read commands, same-origin OIDC sessions and authenticated artifact downloads (§6); frontend design/states (§7); independent deletion ledger and recovery (§11). The first-release functional scope and existing evidence invariants remain required. These amendments are proposed for G0 review, not implementation authorization.
+The final product name is **FactLedger**. Read [engineering-review.md](engineering-review.md) as the proposed replacement contract for the affected sections below. In this review package its explicit contracts take precedence over earlier prose: run-owned progressive results and explicit revision integration (§4); submission/decision separation and supersession on edits (§4); fenced leases and durable job receipts (§4); composite tenant/case/version relationships and MetricObservation (§5); preflight plans, API errors/read commands, same-origin OIDC sessions and authenticated artifact downloads (§6); frontend design/states (§7); independent deletion ledger and recovery (§11). The first-release functional scope and existing evidence invariants remain required. These amendments are proposed for G0 review, not implementation authorization.
 
 ## 1. Design brief and decision
 
 Build a full functioning investigation workspace for small Indian newsrooms checking public spending and project-delivery claims. The product helps a researcher assemble evidence and an editor reproduce and review the reasoning. Search through SerpApi is central to investigation. Human editorial judgment remains accountable and separately recorded.
 
-Working brand: Civreniq — public-project claims, traced to evidence. Public-web name screening found no exact indexed match; this is not trademark clearance. See naming-and-ip.md. Track decision: **Knowledge & Public Interest**. AI Agents is the technical approach and alternative track if the product's primary purpose later changes. Track choice is not a claim about competition density or win probability. See `research.md` for direct sources, limitations and adoption hypotheses.
+Working brand: FactLedger — public-project claims, traced to evidence. Public-web name screening found no exact indexed match; this is not trademark clearance. See naming-and-ip.md. Track decision: **Knowledge & Public Interest**. AI Agents is the technical approach and alternative track if the product's primary purpose later changes. Track choice is not a claim about competition density or win probability. See `research.md` for direct sources, limitations and adoption hypotheses.
 
-The workspace is empty of existing product code. Previous descriptions of Civreniq capabilities are not treated as verified assets. Stack choices below are proposals, not claims about installed software or an existing system.
+The workspace is empty of existing product code. Previous descriptions of FactLedger capabilities are not treated as verified assets. Stack choices below are proposals, not claims about installed software or an existing system.
 
 ## 2. Target user and painful workflow
 

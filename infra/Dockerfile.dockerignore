@@ -4,6 +4,7 @@
 .env.*
 !.env.example
 .data
+.execution
 artifacts
 **/node_modules
 **/dist

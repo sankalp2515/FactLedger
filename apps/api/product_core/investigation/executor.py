@@ -37,8 +37,8 @@ def _safe_provider_error(exc):
     )
 
 
-def claim_run(run_id, owner):
-    return leases.claim_run(SessionLocal, run_id, owner)
+def claim_run(run_id, owner, workspace_id=None):
+    return leases.claim_run(SessionLocal, run_id, owner, workspace_id=workspace_id)
 
 
 def update_run(lease, operation):
@@ -508,8 +508,8 @@ def _finish_investigation(lease):
     )
 
 
-def execute_run(run_id: str) -> None:
-    lease = claim_run(run_id, "worker-" + str(uuid4()))
+def execute_run(run_id: str, workspace_id: str | None = None) -> None:
+    lease = claim_run(run_id, "worker-" + str(uuid4()), workspace_id=workspace_id)
     if lease is None:
         return
     stopped = threading.Event()

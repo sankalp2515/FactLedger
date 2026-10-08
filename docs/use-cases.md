@@ -1,4 +1,4 @@
-# Civreniq — 10 target-user use cases
+# FactLedger — 10 target-user use cases
 8 October 2026 · All names, quantities and situations below are illustrative fixtures, not real-world findings.
 
 Each case uses the same core workflow: scope → plan → SerpApi discovery → source acquisition → stage/quantity comparison → gaps → researcher/editor review → frozen pack. These are ten practical checks within one product, not ten unrelated products.

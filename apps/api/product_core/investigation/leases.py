@@ -70,8 +70,10 @@ def tick(run):
     run.usage = usage
 
 
-def claim_run(sessions, run_id, owner):
+def claim_run(sessions, run_id, owner, workspace_id=None):
     with sessions.begin() as session:
+        if workspace_id is not None:
+            set_workspace(session, workspace_id)
         run = locked(session, run_id)
         if not run or run.state in TERMINAL or run.state == "PAUSED":
             return None
@@ -97,8 +99,8 @@ def claim_run(sessions, run_id, owner):
 
 def update_run(sessions, lease, operation):
     with sessions.begin() as session:
-        # Set transaction-local tenant before any scoped query. Claim enumeration
-        # requires the documented privileged worker dispatch database role.
+        # Set transaction-local tenant before any scoped query. Dispatch exposes
+        # only due run identities through the bounded database function.
         if session.bind.dialect.name == "postgresql":
             set_workspace(session, lease.workspace_id)
         run = locked(session, lease.run_id)

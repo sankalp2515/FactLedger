@@ -1,5 +1,7 @@
 # Submission readiness and judging evidence
 
+Final product name: **FactLedger**. Read the current [release audit](release-readiness.md) for measured results, repaired defects and hosted-production gates. The public repository and demo video remain unpublished locally; supplying a GitHub destination and selecting a license are the remaining repository-owner inputs.
+
 The [official rules](https://serpapi.github.io/serpapi-india-hackathon-2026/rules.html) were read on 8 October 2026. They require material SerpApi functionality, accessible public code/setup instructions, AI disclosure, and a locally running screen recording under three minutes. Final receipt is due 10 October 2026, 23:59 IST. Eligibility and terms acceptance belong to the human participant; local engineering authorization does not authorize public release or submission.
 
 | Criterion | Concrete evidence to prepare |

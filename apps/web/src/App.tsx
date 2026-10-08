@@ -194,7 +194,7 @@ export function App() {
       <main className="login">
         <div className="brand">
           <BookOpen />
-          [Product Name]
+          FactLedger
         </div>
         <h1>Your newsroom research desk.</h1>
         <p>
@@ -228,7 +228,7 @@ export function App() {
               <BookOpen size={21} />
             </span>
             <span>
-              [Product Name]<small>Research workspace</small>
+              FactLedger<small>Research workspace</small>
             </span>
           </Link>
           <div className="workspace-name">{s.workspace.name}</div>
@@ -709,8 +709,38 @@ function Workbench() {
               <button
                 key={x}
                 role="tab"
+                id={`case-tab-${x}`}
+                data-tab={x}
+                aria-controls="case-tab-panel"
                 aria-selected={tab === x}
+                tabIndex={tab === x ? 0 : -1}
                 onClick={() => choose("tab", x)}
+                onKeyDown={(event) => {
+                  if (
+                    !["ArrowLeft", "ArrowRight", "Home", "End"].includes(
+                      event.key,
+                    )
+                  )
+                    return;
+                  event.preventDefault();
+                  const buttons = Array.from(
+                    event.currentTarget.parentElement!.querySelectorAll<HTMLButtonElement>(
+                      '[role="tab"]',
+                    ),
+                  );
+                  const current = buttons.indexOf(event.currentTarget);
+                  const next =
+                    event.key === "Home"
+                      ? 0
+                      : event.key === "End"
+                        ? buttons.length - 1
+                        : (current +
+                            (event.key === "ArrowRight" ? 1 : -1) +
+                            buttons.length) %
+                          buttons.length;
+                  choose("tab", buttons[next].dataset.tab!);
+                  buttons[next].focus();
+                }}
               >
                 {x === "stages"
                   ? "Delivery stages"
@@ -721,7 +751,12 @@ function Workbench() {
               </button>
             ))}
           </div>
-          <div className="tab-content" role="tabpanel">
+          <div
+            className="tab-content"
+            role="tabpanel"
+            id="case-tab-panel"
+            aria-labelledby={`case-tab-${tab}`}
+          >
             {tab === "evidence" && (
               <>
                 <div className="section-head">

@@ -1,7 +1,11 @@
-# Civreniq — naming decision and IP boundaries
+# FactLedger naming record
+
+The owner selected **FactLedger** on 8 October 2026. The screening below concerned older candidates and provides no clearance for FactLedger. No FactLedger trademark/domain clearance or purchase is claimed.
+
+## Historical candidate screening — superseded
 8 October 2026
 
-## Decision
+### Earlier decision (superseded by FactLedger)
 
 Finalize **Civreniq** as the project's working product brand. Pronunciation: “siv-ren-ik.” Intended association: civic records and inquiry. Tagline: “Public-project claims, traced to evidence.” It is a coined brand, not an established dictionary word.
 

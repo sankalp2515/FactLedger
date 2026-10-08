@@ -3,8 +3,36 @@ from datetime import timedelta
 import httpx
 import pytest
 from product_core.investigation import executor
-from product_core.investigation.search import SerpApiSearch
+from product_core.investigation.search import SerpApiSearch, parse_results
 from product_core.models import Run, now
+
+
+def test_news_cluster_preserves_highlight_and_nested_publisher_records():
+    payload = {
+        "news_results": [
+            {
+                "title": "Coverage cluster",
+                "highlight": {
+                    "link": "https://example.org/primary",
+                    "title": "Original",
+                    "iso_date": "2026-10-08T08:00:00Z",
+                    "source": {"name": "Publisher A"},
+                },
+                "stories": [
+                    {
+                        "link": "https://example.org/opposing",
+                        "title": "Follow-up",
+                        "source": {"name": "Publisher B"},
+                    }
+                ],
+            }
+        ]
+    }
+    rows = parse_results(payload, "google_news", "scoped question")
+    assert [r["url"] for r in rows] == ["https://example.org/primary", "https://example.org/opposing"]
+    assert rows[0]["publication_date"] == "2026-10-08T08:00:00Z"
+    assert rows[1]["publisher"] == "Publisher B"
+    assert all(r["discovery_only"] for r in rows)
 
 
 def test_async_processing_archive_yields_provenance_without_secret():

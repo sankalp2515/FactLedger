@@ -103,6 +103,29 @@ it("shows the empty library and creates a case through the server", async () => 
   expect(
     await screen.findByRole("heading", { name: "Water supply" }),
   ).toBeInTheDocument();
+  fireEvent.keyDown(screen.getByRole("tab", { name: "evidence 0" }), {
+    key: "ArrowRight",
+  });
+  await waitFor(() =>
+    expect(screen.getByRole("tab", { name: "families" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    ),
+  );
+  expect(screen.getByRole("tab", { name: "families" })).toHaveFocus();
+  expect(screen.getByRole("tabpanel")).toHaveAttribute(
+    "aria-labelledby",
+    "case-tab-families",
+  );
+  fireEvent.keyDown(screen.getByRole("tab", { name: "families" }), {
+    key: "Home",
+  });
+  await waitFor(() =>
+    expect(screen.getByRole("tab", { name: "evidence 0" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    ),
+  );
 });
 it("exposes an unavailable API with a retry action instead of a fixture result", async () => {
   vi.stubGlobal(

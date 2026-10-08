@@ -39,8 +39,22 @@ def sanitize(value):
 
 def parse_results(payload: dict, engine: str, query: str) -> list[dict]:
     rows = payload.get("news_results" if engine == "google_news" else "organic_results", [])
+    if engine == "google_news":
+        # News groups may contain publisher links only inside highlight/stories.
+        flattened = []
+        for group in rows[:20]:
+            if not isinstance(group, dict):
+                continue
+            flattened.append(group)
+            if isinstance(group.get("highlight"), dict):
+                flattened.append(group["highlight"])
+            flattened.extend(s for s in group.get("stories", [])[:20] if isinstance(s, dict))
+        rows = flattened
     results = []
-    for index, row in enumerate(rows[:20]):
+    seen = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
         url = row.get("link", "")
         try:
             parts = urlsplit(url)
@@ -48,6 +62,9 @@ def parse_results(payload: dict, engine: str, query: str) -> list[dict]:
             continue
         if parts.scheme != "https" or not parts.hostname or parts.username or parts.password:
             continue
+        if url in seen:
+            continue
+        seen.add(url)
         source = row.get("source")
         source = source.get("name") if isinstance(source, dict) else source
         results.append(
@@ -55,15 +72,17 @@ def parse_results(payload: dict, engine: str, query: str) -> list[dict]:
                 "url": url,
                 "title": str(row.get("title", ""))[:400],
                 "snippet": str(row.get("snippet", ""))[:2000],
-                "rank": index + 1,
+                "rank": len(results) + 1,
                 "engine": engine,
                 "query": query,
-                "publication_date": row.get("date"),
+                "publication_date": row.get("iso_date") or row.get("date"),
                 "date_provenance": "provider_unverified",
                 "publisher": source,
                 "discovery_only": True,
             }
         )
+        if len(results) == 20:
+            break
     return results
 
 

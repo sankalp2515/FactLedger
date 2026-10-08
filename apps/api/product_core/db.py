@@ -37,7 +37,7 @@ def init_db():
 
 
 def set_workspace(session, workspace_id: str):
-    if engine.dialect.name == "postgresql":
+    if session.get_bind().dialect.name == "postgresql":
         session.execute(
             text("SELECT set_config('app.workspace_id', :workspace, true)"), {"workspace": workspace_id}
         )

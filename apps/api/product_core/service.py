@@ -42,7 +42,10 @@ def transaction(actor: Actor):
 
 def case_for(db, actor, case_id, include_deleted=False):
     case = db.scalar(
-        select(Case).where(Case.id == case_id, Case.workspace_id == actor.workspace_id).with_for_update()
+        select(Case)
+        .where(Case.id == case_id, Case.workspace_id == actor.workspace_id)
+        # Non-key mutations must permit worker inserts' foreign-key KEY SHARE locks.
+        .with_for_update(key_share=True)
     )
     if not case or (case.deleted_at and not include_deleted):
         raise DomainError("NOT_FOUND", "Case is unavailable.", 404)
@@ -231,25 +234,9 @@ def make_plan(actor, case_id, revision):
         payload = snapshot(db, case)
         if not payload["claims"]:
             raise DomainError("INVALID_SCOPE", "Confirm at least one scoped claim before planning.", 422)
-        queries = []
-        for claim in payload["claims"]:
-            base = f"{claim['subject']} {claim['geography']} {claim['period']}"
-            queries.extend(
-                [
-                    {
-                        "query": base + " official status report",
-                        "engine": "google",
-                        "purpose": "PRIMARY_RECORD",
-                        "claim_id": claim["id"],
-                    },
-                    {
-                        "query": base + " delays incomplete not operational audit",
-                        "engine": "google_news",
-                        "purpose": "OPPOSING",
-                        "claim_id": claim["id"],
-                    },
-                ]
-            )
+        from .investigation.search import plan_queries
+
+        queries = plan_queries(payload["claims"])
         plan = Plan(
             workspace_id=actor.workspace_id,
             case_id=case.id,
@@ -366,12 +353,16 @@ def start_run(actor, case_id, data, key):
 
 
 def run_for(db, actor, run_id):
+    # Resolve without locking, then acquire Case -> Run consistently with deletion.
+    case_id = db.scalar(select(Run.case_id).where(Run.id == run_id, Run.workspace_id == actor.workspace_id))
+    if not case_id:
+        raise DomainError("NOT_FOUND", "Investigation is unavailable.", 404)
+    case_for(db, actor, case_id)
     run = db.scalar(
         select(Run).where(Run.id == run_id, Run.workspace_id == actor.workspace_id).with_for_update()
     )
     if not run:
         raise DomainError("NOT_FOUND", "Investigation is unavailable.", 404)
-    case_for(db, actor, run.case_id)
     return run
 
 
@@ -509,6 +500,14 @@ def submit_review(actor, case_id, data):
 
 
 def review_for(db, actor, review_id):
+    case_id = db.scalar(
+        select(ReviewRequest.case_id).where(
+            ReviewRequest.id == review_id, ReviewRequest.workspace_id == actor.workspace_id
+        )
+    )
+    if not case_id:
+        raise DomainError("NOT_FOUND", "Review is unavailable.", 404)
+    case = case_for(db, actor, case_id)
     review = db.scalar(
         select(ReviewRequest)
         .where(ReviewRequest.id == review_id, ReviewRequest.workspace_id == actor.workspace_id)
@@ -516,7 +515,6 @@ def review_for(db, actor, review_id):
     )
     if not review:
         raise DomainError("NOT_FOUND", "Review is unavailable.", 404)
-    case = case_for(db, actor, review.case_id)
     return review, case
 
 
@@ -590,7 +588,7 @@ def export_case(actor, case_id, revision, format_):
         title = payload.get("_case", {}).get("title", case.title)
         pack = {
             "schema_version": 1,
-            "product": "[Product Name]",
+            "product": "FactLedger",
             "case_id": case.id,
             "revision": revision,
             "title": title,

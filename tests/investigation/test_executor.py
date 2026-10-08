@@ -170,7 +170,10 @@ def test_budget_reservations_are_serialized_across_workers(database):
         assert s.get(Run, "run").usage["searches"] == 1
 
 
-def test_manual_uploaded_source_is_analyzed_without_refetch_or_search(database, monkeypatch):
+@pytest.mark.parametrize("search_budget", [0, 2])
+def test_manual_source_requires_opposing_discovery_when_budget_available(
+    database, monkeypatch, search_budget
+):
     from product_core.investigation.acquisition import AcquiredDocument
     from product_core.investigation.model import ModelResult
     from product_core.investigation.storage import store_document
@@ -196,7 +199,7 @@ def test_manual_uploaded_source_is_analyzed_without_refetch_or_search(database, 
         run = s.get(Run, "run")
         run.mode = "live"
         run.plan = dict(run.plan, sources=[{"id": "manual"}])
-        run.budget = dict(run.budget, searches=0)
+        run.budget = dict(run.budget, searches=search_budget, rounds=1)
         fact = dict(run.plan["claims"][0], quote=quote, relation="SUPPORTS")
 
     class Model:
@@ -205,18 +208,23 @@ def test_manual_uploaded_source_is_analyzed_without_refetch_or_search(database, 
                 [fact], 100, {"provider": "groq", "model": "test", "prompt_hash": "abc", "input_hash": "def"}
             )
 
+    class Search:
+        def search(self, query, engine, **kwargs):
+            return {"results": [], "engine": engine, "query": query}
+
     monkeypatch.setenv("SERPAPI_API_KEY", "test-only")
     monkeypatch.setenv("GROQ_API_KEY", "test-only")
     monkeypatch.setattr(executor, "StructuredModel", lambda *args: Model())
+    monkeypatch.setattr(executor, "SerpApiSearch", lambda _: Search())
     monkeypatch.setattr(executor, "acquire", lambda _: pytest.fail("manual record must not refetch"))
     executor.execute_run("run")
     with database() as s:
         run = s.get(Run, "run")
-        assert run.error == "OPPOSING_COVERAGE_NOT_CHECKED"
+        assert run.error == ("OPPOSING_COVERAGE_NOT_CHECKED" if search_budget == 0 else None)
         assert run.results["evidence"][0]["relation"] == "SUPPORTS"
         assert run.results["evidence"][0]["metadata"]["model"] == "test"
-        assert run.usage.get("searches", 0) == 0
-        assert run.state == "PARTIAL"
+        assert run.usage.get("searches", 0) == search_budget
+        assert run.state == ("PARTIAL" if search_budget == 0 else "COMPLETED")
 
 
 def test_provider_timeouts_surface_partial_with_actionable_safe_error(database, monkeypatch):

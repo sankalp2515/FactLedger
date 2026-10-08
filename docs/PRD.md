@@ -1,4 +1,4 @@
-# Civreniq — Product Requirements Document
+# FactLedger — Product Requirements Document
 Version 1.0 · 8 October 2026 · Design finalized for review; implementation not authorized
 
 ## 1. Decision and product promise
@@ -7,11 +7,11 @@ Version 1.0 · 8 October 2026 · Design finalized for review; implementation not
 
 **Problem statement:** Indian newsroom researchers cannot reliably distinguish public-project announcements, approvals, funding, completion and actual operation when evidence is scattered across dated official records and repeated news reports. They need a stage- and time-specific evidence case that traces claims to original records, exposes missing or opposing evidence, and can be reproduced by an editor. Otherwise, they risk misleading reporting or substantial manual reconstruction.
 
-**Product:** Civreniq is an evidence investigation workspace for public spending and project-delivery claims. It turns a scoped claim into a source-backed delivery-stage timeline, comparison matrix, missing-evidence checklist and editor-reviewed evidence pack. It does not certify ground reality or assign a numerical truth score.
+**Product:** FactLedger is an evidence investigation workspace for public spending and project-delivery claims. It turns a scoped claim into a source-backed delivery-stage timeline, comparison matrix, missing-evidence checklist and editor-reviewed evidence pack. It does not certify ground reality or assign a numerical truth score.
 
 **One-line pitch:** “Trace public-project claims from announcement to actual delivery—with evidence your editor can inspect.”
 
-Civreniq is a screened working brand, not a legally cleared mark. See [naming and IP](naming-and-ip.md). Nothing here guarantees a hackathon win, commercial demand, source completeness or factual correctness.
+FactLedger is a screened working brand, not a legally cleared mark. See [naming and IP](naming-and-ip.md). Nothing here guarantees a hackathon win, commercial demand, source completeness or factual correctness.
 
 ## 2. Target user, buyer and workflow
 
@@ -181,6 +181,6 @@ The official event assesses idea strength, originality, technical complexity, us
 | Name/IP conflict | Screened brand; registry/domain clearance before commercial branding |
 | Public repository conflicts with secrecy | Hackathon requires public code; explicit release gate and deliberate license; keep customer data/secrets private |
 
-Final decisions: focused public-project domain; Knowledge & Public Interest; Civreniq working brand; modular API/worker; constrained agents; reviewable evidence rather than autonomous verdicts; no implementation before design review.
+Final decisions: focused public-project domain; Knowledge & Public Interest; FactLedger working brand; modular API/worker; constrained agents; reviewable evidence rather than autonomous verdicts; no implementation before design review.
 
 Sources and confidence levels: [research.md](research.md). External facts are sourced there; proposed architecture, demand and metrics remain our design choices/hypotheses.

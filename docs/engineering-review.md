@@ -1,4 +1,4 @@
-# [Product Name] — engineering review and proposed design amendments
+# FactLedger — engineering review and proposed design amendments
 
 8 October 2026 · Pre-implementation review · Proposed for user review
 
@@ -8,7 +8,7 @@ Build an English-first evidence investigation workspace for Indian newsroom rese
 
 The workspace currently contains documentation and design artifacts only. There is no application, dependency lockfile, database, executed application test suite, deployment, or Git repository. Existing test commands and performance targets are plans, not results.
 
-The product name is undecided. Use **[Product Name]** in new user-facing artifacts, `product_core` for the Python domain package and `product_worker` for its worker. Previous names and name-screening conclusions in older documents are superseded by the user's instruction. Naming is independent of architecture; no domain registration or purchase is needed.
+The final product name is FactLedger. Use **FactLedger** in new user-facing artifacts, `product_core` for the Python domain package and `product_worker` for its worker. Previous names and name-screening conclusions in older documents are superseded by the user's instruction. Naming is independent of architecture; no domain registration or purchase is needed.
 
 Read this alongside [PRD](PRD.md), [system specification](product-system-spec.md), [agent design](agent-design.md), [use cases](use-cases.md), and [implementation plan](implementation-plan.md). This review proposes amendments; it does not represent an implemented system or an approved scope change.
 
@@ -260,7 +260,7 @@ Engineering can resolve the proposed contract details without assigning routine 
 
 The existing package requires G0 design review before implementation and G1 consolidated frontend finalization before UI implementation. The brainstorming skill likewise requires review of the written spec before implementation planning/execution. This document is the concrete pre-implementation review for those discussions; implementation has not begun.
 
-Remaining external dependencies are provider credentials, a chosen hosted issuer/provider if public hosting is later requested, qualified independent annotators/pilot participants, and authorization for spend/publication/licenses/submission. Their absence must be disclosed rather than represented as engineering success. Branding stays [Product Name] until supplied.
+Remaining external dependencies are provider credentials, a chosen hosted issuer/provider if public hosting is later requested, qualified independent annotators/pilot participants, and authorization for spend/publication/licenses/submission. Their absence must be disclosed rather than represented as engineering success. Branding stays FactLedger until supplied.
 
 ## 13. Final review status
 
