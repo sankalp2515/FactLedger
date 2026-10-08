@@ -1,0 +1,84 @@
+name: evidence-workspace
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: evidence
+      POSTGRES_USER: evidence
+      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:-local-development-only}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evidence -d evidence"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  migrate:
+    image: evidence-workspace-migrate:latest
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    env_file: ../.env
+    environment: &app-env
+      DATABASE_URL: postgresql+psycopg://evidence:${LOCAL_DB_PASSWORD:-local-development-only}@postgres:5432/evidence
+      ARTIFACT_DIR: /data/artifacts
+      MODE: development
+      PUBLIC_URL: http://127.0.0.1:${APP_PORT:-8008}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  api:
+    image: evidence-workspace-api:latest
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    env_file: ../.env
+    read_only: true
+    tmpfs: ["/tmp:size=128m,noexec,nosuid,nodev"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 128
+    environment: *app-env
+    command: ["uvicorn", "product_core.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:${APP_PORT:-8008}:8000"
+    volumes:
+      - artifacts:/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+  worker:
+    image: evidence-workspace-worker:latest
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    env_file: ../.env
+    read_only: true
+    tmpfs: ["/tmp:size=128m,noexec,nosuid,nodev"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 128
+    environment: *app-env
+    command: ["python", "-m", "product_core.worker"]
+    volumes:
+      - artifacts:/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+volumes:
+  postgres-data:
+  artifacts:

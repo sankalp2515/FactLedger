@@ -1,0 +1,10 @@
+{"id":"UC-01","label":"CONTEXT","label_origin":"synthetic-engineering","claim":"200-bed hospital fully operational","source":"Hospital inaugurated; no patient services described.","trap":"Inauguration is not operation"}
+{"id":"UC-02","label":"CONTEXT","label_origin":"synthetic-engineering","claim":"500 crore expended FY2025-26","source":"500 crore allocated FY2025-26.","trap":"Allocation is not expenditure"}
+{"id":"UC-03","label":"INCOMPARABLE","label_origin":"synthetic-engineering","claim":"Entire 80 km corridor open","source":"20 km northern segment opened.","trap":"Segment is not whole route"}
+{"id":"UC-04","label":"CONTEXT","label_origin":"synthetic-engineering","claim":"10000 households receive daily water","source":"10000 taps installed.","trap":"Installation is not daily service"}
+{"id":"UC-05","label":"INCOMPARABLE","label_origin":"synthetic-engineering","claim":"School functioning for 800 students","source":"New building capacity is 800 seats.","trap":"Capacity is not enrollment or instruction"}
+{"id":"UC-06","label":"CONTEXT","label_origin":"synthetic-engineering","claim":"2000 families occupy homes","source":"2000 units approved.","trap":"Approval is not occupancy"}
+{"id":"UC-07","label":"INCOMPARABLE","label_origin":"synthetic-engineering","claim":"Training causally created 5000 jobs","source":"Programme reports 5000 placement offers.","trap":"Offers are not unique jobs or causality"}
+{"id":"UC-08","label":"CONTEXT","label_origin":"synthetic-engineering","claim":"100 MW operating capacity","source":"100 MW approved capacity.","trap":"Approval is not commissioning"}
+{"id":"UC-09","label":"INCOMPARABLE","label_origin":"synthetic-engineering","claim":"100000 unique people paid September","source":"100000 cumulative payment transactions.","trap":"Transactions are not unique monthly beneficiaries"}
+{"id":"UC-10","label":"INCOMPARABLE","label_origin":"synthetic-engineering","claim":"Hospital operating on September 30","source":"New service record says operation began October 5.","trap":"New record cannot backdate operation or inherit approval"}

@@ -1,0 +1,621 @@
+{
+  "schema_version": 1,
+  "product": "[Product Name]",
+  "case_id": "6fc21815-7f8a-4448-9319-3d03d26b9484",
+  "revision": 3,
+  "title": "Demo: inauguration versus operational care",
+  "status": "APPROVED",
+  "conclusion": "Synthetic demonstration only: the collected record describes inauguration and a 200-bed capacity. It does not establish operational patient care by September 2026. An operational service record and independent opposing discovery remain necessary.",
+  "review": {
+    "revision": 3,
+    "submitted_by": "researcher",
+    "conclusion": "Synthetic demonstration only: the collected record describes inauguration and a 200-bed capacity. It does not establish operational patient care by September 2026. An operational service record and independent opposing discovery remain necessary.",
+    "citations": [
+      "e7d68223-059a-42d9-b098-e01cc5e771ed"
+    ],
+    "snapshot": {
+      "claims": [
+        {
+          "id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+          "text": "Hospital A in District A was operational with 200 beds by September 2026.",
+          "subject": "Hospital A",
+          "geography": "District A",
+          "period": "2026-09",
+          "stage": "OPERATIONAL",
+          "measure": "CAPACITY",
+          "value": "200",
+          "unit": "beds",
+          "currency": null,
+          "denominator": null,
+          "attribution": null,
+          "version": 2
+        }
+      ],
+      "projects": [
+        {
+          "id": "280af0bd-788b-4945-9bfe-dee4b8044377",
+          "canonical_name": "Hospital A",
+          "geography": "District A",
+          "identity_status": "CONFIRMED"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "e7d68223-059a-42d9-b098-e01cc5e771ed",
+          "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+          "source_id": "71449f2a-c000-42f6-a5df-48e357e0731e",
+          "relation": "CONTEXT",
+          "quote": "SYNTHETIC UC-01: Hospital A record for District A during 2026-09 reports INAUGURATED: 200 beds. This fictional fixture is not a real public record.",
+          "anchor": {
+            "start": 0,
+            "end": 147
+          },
+          "comparison": {
+            "claim": {
+              "subject": "Hospital A",
+              "geography": "District A",
+              "period": "2026-09",
+              "denominator": null,
+              "attribution": null,
+              "stage": "OPERATIONAL",
+              "measure": "CAPACITY",
+              "value": "200",
+              "unit": "beds",
+              "currency": null
+            },
+            "observed": {
+              "subject": "Hospital A",
+              "geography": "District A",
+              "period": "2026-09",
+              "attribution": "Synthetic public authority",
+              "stage": "INAUGURATED",
+              "measure": "CAPACITY",
+              "value": "200",
+              "unit": "beds",
+              "event_date": "2026-09-30"
+            },
+            "quantity": {
+              "comparable": true,
+              "equal": true,
+              "left_normalized": "200",
+              "right_normalized": "200",
+              "reasons": [],
+              "operation": "unit_normalization",
+              "operands": [
+                {
+                  "id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+                  "text": "Hospital A in District A was operational with 200 beds by September 2026.",
+                  "subject": "Hospital A",
+                  "geography": "District A",
+                  "period": "2026-09",
+                  "stage": "OPERATIONAL",
+                  "measure": "CAPACITY",
+                  "value": "200",
+                  "unit": "beds",
+                  "currency": null,
+                  "denominator": null,
+                  "attribution": null,
+                  "version": 2
+                },
+                {
+                  "subject": "Hospital A",
+                  "geography": "District A",
+                  "period": "2026-09",
+                  "attribution": "Synthetic public authority",
+                  "stage": "INAUGURATED",
+                  "measure": "CAPACITY",
+                  "value": "200",
+                  "unit": "beds",
+                  "event_date": "2026-09-30"
+                }
+              ]
+            },
+            "gaps": [
+              "stage"
+            ]
+          },
+          "rationale": "Scope and literal quotation checked; semantic interpretation requires review.",
+          "metadata": {
+            "validation_version": "1",
+            "semantic_proposal": true,
+            "extraction_hash": "fc8c53a891c5869c6e35f7e14ec7703307630b0c8e748bfbf2eade38905f3b40"
+          }
+        }
+      ],
+      "sources": [
+        {
+          "id": "71449f2a-c000-42f6-a5df-48e357e0731e",
+          "url": "fixture://UC-01",
+          "title": "Synthetic UC-01 record",
+          "status": "ACQUIRED",
+          "metadata": {
+            "synthetic": true,
+            "fixture_case": "UC-01",
+            "source_type": "synthetic",
+            "extraction_version": "fixture-v1",
+            "facts": [
+              {
+                "quote": "SYNTHETIC UC-01: Hospital A record for District A during 2026-09 reports INAUGURATED: 200 beds. This fictional fixture is not a real public record.",
+                "subject": "Hospital A",
+                "geography": "District A",
+                "period": "2026-09",
+                "stage": "INAUGURATED",
+                "measure": "CAPACITY",
+                "value": "200",
+                "unit": "beds",
+                "relation": "SUPPORTS",
+                "attribution": "Synthetic public authority",
+                "event_date": "2026-09-30"
+              }
+            ],
+            "publication_date": "2026-10-01",
+            "event_date": "2026-09-30",
+            "date_provenance": "synthetic",
+            "media_type": "text/plain"
+          },
+          "content_hash": "fc8c53a891c5869c6e35f7e14ec7703307630b0c8e748bfbf2eade38905f3b40",
+          "extraction_hash": "fc8c53a891c5869c6e35f7e14ec7703307630b0c8e748bfbf2eade38905f3b40"
+        }
+      ],
+      "ledger": {
+        "stages": [
+          {
+            "id": "c03d2174-77be-4844-8cda-e6feef21542f",
+            "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+            "source_id": "71449f2a-c000-42f6-a5df-48e357e0731e",
+            "quote": "SYNTHETIC UC-01: Hospital A record for District A during 2026-09 reports INAUGURATED: 200 beds. This fictional fixture is not a real public record.",
+            "evidence_ids": [
+              "e7d68223-059a-42d9-b098-e01cc5e771ed"
+            ],
+            "event_date": "2026-09-30",
+            "period": "2026-09",
+            "stage": "INAUGURATED"
+          }
+        ],
+        "funding": [],
+        "metrics": [
+          {
+            "id": "c03d2174-77be-4844-8cda-e6feef21542f",
+            "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+            "source_id": "71449f2a-c000-42f6-a5df-48e357e0731e",
+            "quote": "SYNTHETIC UC-01: Hospital A record for District A during 2026-09 reports INAUGURATED: 200 beds. This fictional fixture is not a real public record.",
+            "evidence_ids": [
+              "e7d68223-059a-42d9-b098-e01cc5e771ed"
+            ],
+            "event_date": "2026-09-30",
+            "period": "2026-09",
+            "kind": "CAPACITY",
+            "value": "200",
+            "unit": "beds",
+            "currency": null,
+            "denominator": null,
+            "methodology": null,
+            "attribution": "Synthetic public authority"
+          }
+        ],
+        "derived": [
+          {
+            "id": "c9a07607-84ae-4d0c-90d1-e38a873071ac",
+            "evidence_ids": [
+              "e7d68223-059a-42d9-b098-e01cc5e771ed"
+            ],
+            "comparable": true,
+            "equal": true,
+            "left_normalized": "200",
+            "right_normalized": "200",
+            "reasons": [],
+            "operation": "unit_normalization",
+            "operands": [
+              {
+                "id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+                "text": "Hospital A in District A was operational with 200 beds by September 2026.",
+                "subject": "Hospital A",
+                "geography": "District A",
+                "period": "2026-09",
+                "stage": "OPERATIONAL",
+                "measure": "CAPACITY",
+                "value": "200",
+                "unit": "beds",
+                "currency": null,
+                "denominator": null,
+                "attribution": null,
+                "version": 2
+              },
+              {
+                "subject": "Hospital A",
+                "geography": "District A",
+                "period": "2026-09",
+                "attribution": "Synthetic public authority",
+                "stage": "INAUGURATED",
+                "measure": "CAPACITY",
+                "value": "200",
+                "unit": "beds",
+                "event_date": "2026-09-30"
+              }
+            ]
+          }
+        ],
+        "gaps": [
+          {
+            "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+            "type": "STAGE",
+            "reason": "Observation does not establish matching stage.",
+            "next_evidence_needed": "Dated source with confirmed stage.",
+            "material": true
+          },
+          {
+            "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+            "type": "MISSING_COMPARABLE_EVIDENCE",
+            "reason": "No comparable decisive evidence was collected.",
+            "next_evidence_needed": "Dated primary record matching confirmed scope, measure, denominator and attribution.",
+            "material": true
+          }
+        ]
+      },
+      "notes": [],
+      "conclusion": "Synthetic demonstration only: the collected record describes inauguration and a 200-bed capacity. It does not establish operational patient care by September 2026. An operational service record and independent opposing discovery remain necessary.",
+      "lineage": [],
+      "_case": {
+        "title": "Demo: inauguration versus operational care",
+        "tags": [],
+        "assignee_id": null
+      },
+      "findings": [
+        {
+          "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+          "finding": "INSUFFICIENT_EVIDENCE",
+          "decisive_ids": [],
+          "opposing_ids": [],
+          "gaps": [
+            {
+              "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+              "type": "STAGE",
+              "reason": "Observation does not establish matching stage.",
+              "next_evidence_needed": "Dated source with confirmed stage.",
+              "material": true
+            },
+            {
+              "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+              "type": "MISSING_COMPARABLE_EVIDENCE",
+              "reason": "No comparable decisive evidence was collected.",
+              "next_evidence_needed": "Dated primary record matching confirmed scope, measure, denominator and attribution.",
+              "material": true
+            }
+          ],
+          "limitations": [
+            "Collected records do not certify ground reality.",
+            "Semantic mappings require researcher/editor review."
+          ]
+        }
+      ],
+      "draft": {
+        "factual_sentences": [
+          {
+            "text": "SYNTHETIC UC-01: Hospital A record for District A during 2026-09 reports INAUGURATED: 200 beds. This fictional fixture is not a real public record.",
+            "evidence_ids": [
+              "e7d68223-059a-42d9-b098-e01cc5e771ed"
+            ]
+          }
+        ],
+        "interpretation": "Automated proposal for editorial review.",
+        "limitations": [
+          "Synthetic fixture data."
+        ],
+        "unanswered_questions": [
+          "Dated source with confirmed stage.",
+          "Dated primary record matching confirmed scope, measure, denominator and attribution."
+        ]
+      },
+      "run_ids": [
+        "83a48b75-606a-427b-bb1e-00b3e5f84d04"
+      ]
+    },
+    "status": "APPROVED",
+    "decision": "APPROVE",
+    "decided_by": "editor",
+    "reason": "Reviewed the preserved synthetic quote and stage mismatch. Approve the qualified uncertainty statement, not the operational claim.",
+    "created_at": "2026-10-08T13:31:14.902459+00:00",
+    "id": "8114f826-a0d8-495d-9c1a-22cbd4da83d8",
+    "workspace_id": "local-newsroom",
+    "case_id": "6fc21815-7f8a-4448-9319-3d03d26b9484"
+  },
+  "claims": [
+    {
+      "id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+      "text": "Hospital A in District A was operational with 200 beds by September 2026.",
+      "subject": "Hospital A",
+      "geography": "District A",
+      "period": "2026-09",
+      "stage": "OPERATIONAL",
+      "measure": "CAPACITY",
+      "value": "200",
+      "unit": "beds",
+      "currency": null,
+      "denominator": null,
+      "attribution": null,
+      "version": 2
+    }
+  ],
+  "evidence": [
+    {
+      "id": "e7d68223-059a-42d9-b098-e01cc5e771ed",
+      "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+      "source_id": "71449f2a-c000-42f6-a5df-48e357e0731e",
+      "relation": "CONTEXT",
+      "quote": "SYNTHETIC UC-01: Hospital A record for District A during 2026-09 reports INAUGURATED: 200 beds. This fictional fixture is not a real public record.",
+      "anchor": {
+        "start": 0,
+        "end": 147
+      },
+      "comparison": {
+        "claim": {
+          "subject": "Hospital A",
+          "geography": "District A",
+          "period": "2026-09",
+          "denominator": null,
+          "attribution": null,
+          "stage": "OPERATIONAL",
+          "measure": "CAPACITY",
+          "value": "200",
+          "unit": "beds",
+          "currency": null
+        },
+        "observed": {
+          "subject": "Hospital A",
+          "geography": "District A",
+          "period": "2026-09",
+          "attribution": "Synthetic public authority",
+          "stage": "INAUGURATED",
+          "measure": "CAPACITY",
+          "value": "200",
+          "unit": "beds",
+          "event_date": "2026-09-30"
+        },
+        "quantity": {
+          "comparable": true,
+          "equal": true,
+          "left_normalized": "200",
+          "right_normalized": "200",
+          "reasons": [],
+          "operation": "unit_normalization",
+          "operands": [
+            {
+              "id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+              "text": "Hospital A in District A was operational with 200 beds by September 2026.",
+              "subject": "Hospital A",
+              "geography": "District A",
+              "period": "2026-09",
+              "stage": "OPERATIONAL",
+              "measure": "CAPACITY",
+              "value": "200",
+              "unit": "beds",
+              "currency": null,
+              "denominator": null,
+              "attribution": null,
+              "version": 2
+            },
+            {
+              "subject": "Hospital A",
+              "geography": "District A",
+              "period": "2026-09",
+              "attribution": "Synthetic public authority",
+              "stage": "INAUGURATED",
+              "measure": "CAPACITY",
+              "value": "200",
+              "unit": "beds",
+              "event_date": "2026-09-30"
+            }
+          ]
+        },
+        "gaps": [
+          "stage"
+        ]
+      },
+      "rationale": "Scope and literal quotation checked; semantic interpretation requires review.",
+      "metadata": {
+        "validation_version": "1",
+        "semantic_proposal": true,
+        "extraction_hash": "fc8c53a891c5869c6e35f7e14ec7703307630b0c8e748bfbf2eade38905f3b40"
+      }
+    }
+  ],
+  "ledger": {
+    "stages": [
+      {
+        "id": "c03d2174-77be-4844-8cda-e6feef21542f",
+        "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+        "source_id": "71449f2a-c000-42f6-a5df-48e357e0731e",
+        "quote": "SYNTHETIC UC-01: Hospital A record for District A during 2026-09 reports INAUGURATED: 200 beds. This fictional fixture is not a real public record.",
+        "evidence_ids": [
+          "e7d68223-059a-42d9-b098-e01cc5e771ed"
+        ],
+        "event_date": "2026-09-30",
+        "period": "2026-09",
+        "stage": "INAUGURATED"
+      }
+    ],
+    "funding": [],
+    "metrics": [
+      {
+        "id": "c03d2174-77be-4844-8cda-e6feef21542f",
+        "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+        "source_id": "71449f2a-c000-42f6-a5df-48e357e0731e",
+        "quote": "SYNTHETIC UC-01: Hospital A record for District A during 2026-09 reports INAUGURATED: 200 beds. This fictional fixture is not a real public record.",
+        "evidence_ids": [
+          "e7d68223-059a-42d9-b098-e01cc5e771ed"
+        ],
+        "event_date": "2026-09-30",
+        "period": "2026-09",
+        "kind": "CAPACITY",
+        "value": "200",
+        "unit": "beds",
+        "currency": null,
+        "denominator": null,
+        "methodology": null,
+        "attribution": "Synthetic public authority"
+      }
+    ],
+    "derived": [
+      {
+        "id": "c9a07607-84ae-4d0c-90d1-e38a873071ac",
+        "evidence_ids": [
+          "e7d68223-059a-42d9-b098-e01cc5e771ed"
+        ],
+        "comparable": true,
+        "equal": true,
+        "left_normalized": "200",
+        "right_normalized": "200",
+        "reasons": [],
+        "operation": "unit_normalization",
+        "operands": [
+          {
+            "id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+            "text": "Hospital A in District A was operational with 200 beds by September 2026.",
+            "subject": "Hospital A",
+            "geography": "District A",
+            "period": "2026-09",
+            "stage": "OPERATIONAL",
+            "measure": "CAPACITY",
+            "value": "200",
+            "unit": "beds",
+            "currency": null,
+            "denominator": null,
+            "attribution": null,
+            "version": 2
+          },
+          {
+            "subject": "Hospital A",
+            "geography": "District A",
+            "period": "2026-09",
+            "attribution": "Synthetic public authority",
+            "stage": "INAUGURATED",
+            "measure": "CAPACITY",
+            "value": "200",
+            "unit": "beds",
+            "event_date": "2026-09-30"
+          }
+        ]
+      }
+    ],
+    "gaps": [
+      {
+        "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+        "type": "STAGE",
+        "reason": "Observation does not establish matching stage.",
+        "next_evidence_needed": "Dated source with confirmed stage.",
+        "material": true
+      },
+      {
+        "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+        "type": "MISSING_COMPARABLE_EVIDENCE",
+        "reason": "No comparable decisive evidence was collected.",
+        "next_evidence_needed": "Dated primary record matching confirmed scope, measure, denominator and attribution.",
+        "material": true
+      }
+    ]
+  },
+  "notes": [],
+  "sources": [
+    {
+      "id": "71449f2a-c000-42f6-a5df-48e357e0731e",
+      "url": "fixture://UC-01",
+      "title": "Synthetic UC-01 record",
+      "status": "ACQUIRED",
+      "metadata": {
+        "synthetic": true,
+        "fixture_case": "UC-01",
+        "source_type": "synthetic",
+        "extraction_version": "fixture-v1",
+        "facts": [
+          {
+            "quote": "SYNTHETIC UC-01: Hospital A record for District A during 2026-09 reports INAUGURATED: 200 beds. This fictional fixture is not a real public record.",
+            "subject": "Hospital A",
+            "geography": "District A",
+            "period": "2026-09",
+            "stage": "INAUGURATED",
+            "measure": "CAPACITY",
+            "value": "200",
+            "unit": "beds",
+            "relation": "SUPPORTS",
+            "attribution": "Synthetic public authority",
+            "event_date": "2026-09-30"
+          }
+        ],
+        "publication_date": "2026-10-01",
+        "event_date": "2026-09-30",
+        "date_provenance": "synthetic",
+        "media_type": "text/plain"
+      },
+      "content_hash": "fc8c53a891c5869c6e35f7e14ec7703307630b0c8e748bfbf2eade38905f3b40",
+      "extraction_hash": "fc8c53a891c5869c6e35f7e14ec7703307630b0c8e748bfbf2eade38905f3b40"
+    }
+  ],
+  "lineage": [],
+  "runs": [
+    {
+      "id": "83a48b75-606a-427b-bb1e-00b3e5f84d04",
+      "mode": "fixture",
+      "plan": {
+        "claims": [
+          {
+            "id": "6d1a7528-616a-455e-a812-37c17b2e8954",
+            "text": "Hospital A in District A was operational with 200 beds by September 2026.",
+            "subject": "Hospital A",
+            "geography": "District A",
+            "period": "2026-09",
+            "stage": "OPERATIONAL",
+            "measure": "CAPACITY",
+            "value": "200",
+            "unit": "beds",
+            "currency": null,
+            "denominator": null,
+            "attribution": null,
+            "version": 2
+          }
+        ],
+        "sources": [],
+        "queries": [
+          {
+            "query": "Hospital A District A 2026-09 official status report",
+            "engine": "google",
+            "purpose": "PRIMARY_RECORD",
+            "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954"
+          },
+          {
+            "query": "Hospital A District A 2026-09",
+            "engine": "google_news",
+            "purpose": "STATUS",
+            "claim_id": "6d1a7528-616a-455e-a812-37c17b2e8954"
+          }
+        ],
+        "scope_hash": "abce4141c4f6b083af3b49338e735b3b5db761f8b4c4a6097e5721090492e4de",
+        "budget": {
+          "searches": 12,
+          "documents": 30,
+          "rounds": 3,
+          "tokens": 60000,
+          "seconds": 600,
+          "usd": 2
+        },
+        "actor_id": "researcher"
+      },
+      "usage": {
+        "searches": 0,
+        "documents": 1,
+        "rounds": 1,
+        "tokens": 0,
+        "seconds": 0.89,
+        "usd": 0,
+        "cost_estimated": true
+      },
+      "state": "COMPLETED"
+    }
+  ],
+  "manifest": {
+    "payload_sha256": "fd0783460a471d7df0807eae71840ca875c0bb6505ed61b8dbf8b7ce6e24b475",
+    "source_hashes": {
+      "71449f2a-c000-42f6-a5df-48e357e0731e": "fc8c53a891c5869c6e35f7e14ec7703307630b0c8e748bfbf2eade38905f3b40"
+    },
+    "note": "Hashes identify preserved bytes, not source authenticity."
+  }
+}

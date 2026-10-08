@@ -1,0 +1,57 @@
+name: verify
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: evidence_test
+          POSTGRES_USER: evidence
+          POSTGRES_PASSWORD: integration-only
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U evidence -d evidence_test" --health-interval 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql+psycopg://evidence:integration-only@localhost:5432/evidence_test
+      ARTIFACT_DIR: /tmp/evidence-artifacts
+      MODE: development
+      SESSION_SECRET: integration-only-secret-not-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -c infra/requirements-runtime.lock -e '.[dev]'
+      - run: ruff check apps/api tests scripts eval migrations
+      - run: alembic upgrade head
+      - run: pytest tests -q
+      - run: pytest eval/tests -q
+      - name: PostgreSQL API and worker fixture journey
+        run: |
+          python -m uvicorn product_core.main:app --host 127.0.0.1 --port 8008 >/tmp/evidence-api.log 2>&1 &
+          api_pid=$!
+          python -m product_core.worker >/tmp/evidence-worker.log 2>&1 &
+          worker_pid=$!
+          trap 'kill "$api_pid" "$worker_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:8008/health/ready >/dev/null; then break; fi
+            sleep 1
+          done
+          python scripts/smoke_fixture.py --base-url http://127.0.0.1:8008
+      - run: alembic check
+      - run: python -m pip wheel --no-deps . --wheel-dir /tmp/evidence-wheels
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable && corepack prepare pnpm@11.0.0 --activate
+      - run: pnpm install --frozen-lockfile
+        working-directory: apps/web
+      - run: pnpm exec tsc --noEmit && pnpm lint && pnpm test && pnpm build
+        working-directory: apps/web
