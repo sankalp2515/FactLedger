@@ -25,4 +25,4 @@ Start with the [repository README](../README.md), [release readiness](release-re
 | [Editable diagrams](factledger.drawio) | diagrams.net architecture source |
 | [Historical design canvas](review-canvas.html) | Early review, not the running application |
 
-Naming is final and the owner selected the [MIT License](../LICENSE). Trademark/domain clearance remains a separate owner decision. [sankalp2515/FactLedger](https://github.com/sankalp2515/FactLedger) is published and public. Fresh remote Compose fixture and frontend checks passed; the full CI rerun remains pending after a test-environment correction.
+Naming is final and the owner selected the [MIT License](../LICENSE). Trademark/domain clearance remains a separate owner decision. [sankalp2515/FactLedger](https://github.com/sankalp2515/FactLedger) is published and public. Fresh remote Compose fixture and frontend checks passed; all three remote CI jobs passed at code commit `a1b84d0815a6d19c99a58a9aba75a13c649b2c24` ([verified run](https://github.com/sankalp2515/FactLedger/actions/runs/37932859762)).
