@@ -27,6 +27,9 @@ def test_provider_protocol_and_accounting(provider, model):
                 },
             )
         if provider == "anthropic":
+            # Newer Claude models reject custom sampling parameters.
+            if "temperature" in body:
+                return httpx.Response(400, json={"error": {"type": "invalid_request_error"}})
             assert request.url == "https://api.anthropic.com/v1/messages"
             assert request.headers["x-api-key"] == "private-test-key"
             assert request.headers["anthropic-version"] == "2023-06-01"

@@ -109,7 +109,6 @@ class StructuredModel:
                     "system": SYSTEM,
                     "messages": [{"role": "user", "content": data}],
                     "max_tokens": self.max_output,
-                    "temperature": 0,
                 },
             )
         if self.provider == "gemini":
