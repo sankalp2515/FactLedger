@@ -36,6 +36,9 @@ services:
       MODE: development
       PUBLIC_URL: http://127.0.0.1:${APP_PORT:-8008}
     command: ["alembic", "upgrade", "head"]
+    # Populate the shared image-owned data directory once before API/worker creation.
+    volumes:
+      - artifacts:/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -60,7 +63,11 @@ services:
     ports:
       - "127.0.0.1:${APP_PORT:-8008}:8000"
     volumes:
-      - artifacts:/data
+      - type: volume
+        source: artifacts
+        target: /data
+        volume:
+          nocopy: true
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -89,7 +96,11 @@ services:
     environment: *app-env
     command: ["python", "-m", "product_core.worker"]
     volumes:
-      - artifacts:/data
+      - type: volume
+        source: artifacts
+        target: /data
+        volume:
+          nocopy: true
     depends_on:
       migrate:
         condition: service_completed_successfully

@@ -19,6 +19,8 @@ An announcement can become a headline about completion. An inauguration can beco
 
 ![FactLedger evidence workbench: live public-record walkthrough](docs/demo/ui-workbench-desktop.png)
 
+*Screenshot from an earlier live walkthrough with the PIB record attached manually.*
+
 > **Release status:** locally verified first release: 149 backend tests, 14 PostgreSQL evaluations and 19 frontend tests passed. A search-only live approval case completed with validated quotations. Hosted production requires the gates in the [production runbook](docs/runbooks/production.md). Synthetic demonstrations are labelled; automated findings describe collected evidence and do not certify conditions on the ground.
 
 [Desktop workbench](docs/demo/ui-workbench-desktop.png) · [Mobile workbench](docs/demo/ui-workbench-mobile.png) · [Live provider accounting](docs/demo/live-provider-costs.png) · [Submission checklist](docs/submission-checklist.md)
