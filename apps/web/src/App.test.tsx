@@ -13,6 +13,85 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
+it("lets researchers correct an observation using labelled fields rather than JSON", async () => {
+  let body: unknown;
+  const payload = {
+    claims: [],
+    evidence: [],
+    sources: [],
+    notes: [],
+    projects: [],
+    lineage: [],
+    conclusion: "",
+    ledger: {
+      stages: [
+        {
+          id: "o",
+          stage: "INAUGURATED",
+          event_date: "2026-09-01",
+          quote: "Opened",
+        },
+      ],
+      funding: [],
+      metrics: [],
+      derived: [],
+      gaps: [],
+    },
+  };
+  vi.stubGlobal("fetch", async (url: string, init?: RequestInit) => {
+    if (url === "/v1/session")
+      return Response.json({
+        user: { id: "researcher", name: "Researcher" },
+        workspace: { id: "w", name: "Newsroom" },
+        role: "researcher",
+        csrf_token: "token",
+        mode: "development",
+        providers: { serpapi: false },
+      });
+    if (url === "/v1/cases/c/ledger-overrides")
+      body = JSON.parse(String(init?.body));
+    return Response.json({
+      id: "c",
+      title: "Case",
+      original_claim: "Claim",
+      revision: 3,
+      state: "DRAFT",
+      tags: [],
+      payload,
+      latest_run: null,
+      review_requests: [],
+    });
+  });
+  render(
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
+      <MemoryRouter initialEntries={["/cases/c?tab=stages"]}>
+        <App />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Correct observation" }),
+  );
+  fireEvent.change(screen.getByLabelText("Corrected value"), {
+    target: { value: "2026-09-02" },
+  });
+  fireEvent.change(screen.getByLabelText("Reason for correction"), {
+    target: { value: "Date checked against original record" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
+  await waitFor(() =>
+    expect(body).toEqual({
+      expected_revision: 3,
+      observation_id: "o",
+      corrected_fields: { event_date: "2026-09-02" },
+      reason: "Date checked against original record",
+    }),
+  );
+});
 it("offers hosted sign-in when authentication is required", async () => {
   vi.stubGlobal("fetch", async () =>
     Response.json(
@@ -375,12 +454,106 @@ it("lets an editor inspect frozen cited evidence without showing research correc
       </MemoryRouter>
     </QueryClientProvider>,
   );
+  fireEvent.click(await screen.findByRole("button", { name: "Evidence" }));
   fireEvent.click(
     await screen.findByRole("button", { name: "Inspect cited source" }),
   );
   expect(
+    await screen.findByRole("dialog", { name: "Inspect reviewed source" }),
+  ).toBeInTheDocument();
+  expect(
     await screen.findByRole("heading", { name: "Original record" }),
   ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Correct evidence relation" }),
+  ).toBeNull();
+  expect(
+    screen.getByRole("button", { name: "Record decision" }),
+  ).toBeInTheDocument();
+  expect(screen.queryByText(/"stage"/)).toBeNull();
+});
+
+it("keeps the frozen evidence assessment readable when the source request fails", async () => {
+  const evidence = {
+    id: "e",
+    claim_id: "cl",
+    source_id: "s",
+    relation: "CONTEXT",
+    quote: "The hospital was inaugurated.",
+    anchor: { start: 0, end: 29 },
+    rationale: "Inauguration does not establish operation.",
+    comparison: {
+      claim: { stage: "OPERATIONAL" },
+      observed: { stage: "INAUGURATED" },
+      gaps: ["stage"],
+    },
+  };
+  vi.stubGlobal("fetch", async (url: string) => {
+    if (url === "/v1/session")
+      return Response.json({
+        user: { id: "editor", name: "Editor" },
+        workspace: { id: "w", name: "Newsroom" },
+        role: "editor",
+        csrf_token: "token",
+        mode: "development",
+        providers: { serpapi: false },
+      });
+    if (url === "/v1/sources/s")
+      return Response.json(
+        { code: "UNAVAILABLE", message: "Capture temporarily unavailable" },
+        { status: 503 },
+      );
+    return Response.json({
+      id: "review",
+      case_id: "c",
+      revision: 3,
+      current_revision: 3,
+      status: "OPEN",
+      conclusion: "Operation remains unestablished.",
+      payload: {
+        claims: [],
+        sources: [
+          {
+            id: "s",
+            title: "Original record",
+            status: "ACQUIRED",
+            url: "https://example.org",
+          },
+        ],
+        evidence: [evidence],
+        ledger: { stages: [], funding: [], metrics: [], derived: [], gaps: [] },
+        notes: [],
+        projects: [],
+        lineage: [],
+        conclusion: "",
+      },
+    });
+  });
+  render(
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
+      <MemoryRouter initialEntries={["/reviews/review"]}>
+        <App />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Evidence" }));
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Inspect cited source" }),
+  );
+  expect(
+    await screen.findByRole("dialog", { name: "Inspect reviewed source" }),
+  ).toBeInTheDocument();
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Capture temporarily unavailable",
+  );
+  expect(screen.getByRole("dialog")).toHaveTextContent(
+    "Inauguration does not establish operation.",
+  );
+  expect(screen.getByRole("dialog")).toHaveTextContent("Delivery stage");
   expect(
     screen.queryByRole("button", { name: "Correct evidence relation" }),
   ).toBeNull();

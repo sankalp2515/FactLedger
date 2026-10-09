@@ -8,6 +8,7 @@ from datetime import UTC, timedelta
 from hashlib import sha256
 from pathlib import Path
 from secrets import token_urlsafe
+from time import perf_counter
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, File, Form, Header, Request, UploadFile
@@ -36,6 +37,7 @@ from .models import (
     now,
     uid,
 )
+from .observability import logger
 
 settings = get_settings()
 
@@ -67,6 +69,7 @@ _pdf_upload = File(...)
 
 @app.middleware("http")
 async def safe_responses(request: Request, call_next):
+    started = perf_counter()
     request_id = str(uuid4())
     request.state.request_id = request_id
     # Bounded per-process ingress guard; workspace/provider admission is persistent.
@@ -91,7 +94,33 @@ async def safe_responses(request: Request, call_next):
             for key in list(rate_windows):
                 if not rate_windows[key] or rate_windows[key][-1] < timestamp - 60:
                     rate_windows.pop(key, None)
-    response = await call_next(request)
+    try:
+        response = await call_next(request)
+    except Exception as exc:  # noqa: BLE001 -- HTTP boundary returns a safe error without private exception details.
+        logger.error(
+            "request.failed",
+            extra={"request_id": request_id, "method": request.method, "error_type": type(exc).__name__},
+        )
+        response = JSONResponse(
+            {
+                "code": "INTERNAL_ERROR",
+                "message": "The request could not be completed.",
+                "request_id": request_id,
+            },
+            status_code=500,
+        )
+    if request.url.path.startswith("/v1"):
+        route = request.scope.get("route")
+        logger.info(
+            "request.completed",
+            extra={
+                "request_id": request_id,
+                "method": request.method,
+                "route": getattr(route, "path", "unmatched"),
+                "status": response.status_code,
+                "duration_ms": round((perf_counter() - started) * 1000, 2),
+            },
+        )
     response.headers["X-Request-ID"] = request_id
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "no-referrer"

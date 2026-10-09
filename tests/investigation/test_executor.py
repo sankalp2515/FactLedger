@@ -205,7 +205,16 @@ def test_manual_source_requires_opposing_discovery_when_budget_available(
     class Model:
         def extract(self, *args):
             return ModelResult(
-                [fact], 100, {"provider": "groq", "model": "test", "prompt_hash": "abc", "input_hash": "def"}
+                [fact],
+                100,
+                {
+                    "provider": "groq",
+                    "model": "test",
+                    "prompt_hash": "abc",
+                    "input_hash": "def",
+                    "prompt_tokens": 80,
+                    "completion_tokens": 20,
+                },
             )
 
     class Search:
@@ -225,6 +234,8 @@ def test_manual_source_requires_opposing_discovery_when_budget_available(
         assert run.results["evidence"][0]["metadata"]["model"] == "test"
         assert run.usage.get("searches", 0) == search_budget
         assert run.state == ("PARTIAL" if search_budget == 0 else "COMPLETED")
+        model_action = next(a for k, a in run.checkpoint["actions"].items() if k.startswith("extract:"))
+        assert model_action["reconciled"]["usd"] == pytest.approx(0.000064)
 
 
 def test_provider_timeouts_surface_partial_with_actionable_safe_error(database, monkeypatch):
@@ -274,3 +285,90 @@ def test_invalid_credentials_are_failed_attempts_not_unknown_charges(database, m
         assert all(a["state"] == "FAILED" for a in errors)
         assert run.usage["searches"] >= 1
         assert run.usage["usd"] == 0
+
+
+def test_live_document_budget_inspects_buried_primary_and_opposing(database, monkeypatch):
+    from product_core.investigation.acquisition import AcquiredDocument
+    from product_core.investigation.model import ModelResult
+
+    official = "https://health.gov.in/hospital-a-operational"
+    opposing = "https://journal.example/hospital-a-closed"
+    fetched = []
+
+    class Search:
+        def search(self, query, engine, **kwargs):
+            rows = (
+                [{"url": opposing, "title": "Hospital A closed District A"}]
+                if engine == "google_news"
+                else [{"url": f"https://guides.example/{i}", "title": "Hospital A guide"} for i in range(14)]
+                + [{"url": official, "title": "Hospital A operational District A"}]
+            )
+            return {"results": rows, "engine": engine, "query": query}
+
+    class Model:
+        def extract(self, *args):
+            return ModelResult([], 100, {})
+
+    def acquire(url):
+        fetched.append(url)
+        return AcquiredDocument("Record", "No comparable evidence.", b"record", "text/plain", {})
+
+    monkeypatch.setenv("SERPAPI_API_KEY", "test-only")
+    monkeypatch.setenv("GROQ_API_KEY", "test-only")
+    monkeypatch.setattr(executor, "SerpApiSearch", lambda _: Search())
+    monkeypatch.setattr(executor, "StructuredModel", lambda *args: Model())
+    monkeypatch.setattr(executor, "acquire", acquire)
+    with database.begin() as s:
+        run = s.get(Run, "run")
+        run.mode = "live"
+        run.budget = dict(run.budget, documents=2, rounds=1)
+    executor.execute_run("run")
+    assert fetched == [official, opposing]
+    with database() as s:
+        run = s.get(Run, "run")
+        assert run.usage["documents"] == 2
+        assert run.usage["searches"] == 2
+        assert run.results["evidence"] == []
+        event = next(e for e in s.scalars(select(RunEvent)).all() if e.type == "DISCOVERY_SELECTION")
+        assert event.payload["discovery_only"] is True
+        assert event.payload["selected"][0]["original_host_signal"] is True
+        assert "snippet" not in str(event.payload)
+        batches = [a["outcome"] for k, a in run.checkpoint["actions"].items() if k.startswith("search:")]
+        assert max(len(batch["results"]) for batch in batches) == 15
+
+
+def test_tracking_alias_in_later_round_reuses_acquired_source(database, monkeypatch):
+    from product_core.investigation.acquisition import AcquiredDocument
+    from product_core.investigation.model import ModelResult
+
+    fetched = []
+
+    class Search:
+        def search(self, query, engine, **kwargs):
+            url = "https://records.example/hospital-a?id=1"
+            if "original" in query:
+                url += "&utm_source=search#section"
+            return {"results": [] if engine == "google_news" else [{"url": url, "title": "Hospital A"}]}
+
+    class Model:
+        def extract(self, *args):
+            return ModelResult([], 100, {})
+
+    def acquire(url):
+        fetched.append(url)
+        return AcquiredDocument("Record", "No comparable evidence.", b"record", "text/plain", {})
+
+    monkeypatch.setenv("SERPAPI_API_KEY", "test-only")
+    monkeypatch.setenv("GROQ_API_KEY", "test-only")
+    monkeypatch.setattr(executor, "SerpApiSearch", lambda _: Search())
+    monkeypatch.setattr(executor, "StructuredModel", lambda *args: Model())
+    monkeypatch.setattr(executor, "acquire", acquire)
+    with database.begin() as s:
+        run = s.get(Run, "run")
+        run.mode = "live"
+        run.budget = dict(run.budget, documents=3, rounds=2)
+    executor.execute_run("run")
+    assert fetched == ["https://records.example/hospital-a?id=1"]
+    with database() as s:
+        assert s.get(Run, "run").usage["documents"] == 1
+        assert len(s.get(Run, "run").results["sources"]) == 1

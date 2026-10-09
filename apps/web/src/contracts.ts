@@ -60,6 +60,20 @@ export interface Payload {
   lineage: RecordData[];
 }
 export interface Run {
+  costs?: {
+    total_usd: number;
+    uncertain_reserved_usd: number;
+    providers: Record<
+      string,
+      {
+        attempts: number;
+        usd: number;
+        prompt_tokens: number;
+        completion_tokens: number;
+        reported_usage_calls: number;
+      }
+    >;
+  };
   id: string;
   case_id: string;
   base_revision: number;

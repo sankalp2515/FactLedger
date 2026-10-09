@@ -10,6 +10,7 @@ from sqlalchemy import or_, select, text
 from product_core.db import SessionLocal, init_db
 from product_core.investigation.executor import execute_run
 from product_core.models import Run
+from product_core.observability import logger
 
 
 def poll_once() -> int:
@@ -29,6 +30,7 @@ def poll_once() -> int:
                 .limit(10)
             ).all()
     for run_id, workspace_id in rows:
+        logger.info("worker.dispatch", extra={"run_id": run_id, "workspace_id": workspace_id})
         execute_run(run_id, workspace_id=workspace_id)
     return len(rows)
 
@@ -38,11 +40,17 @@ def main():
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
     init_db()
+    logger.info("worker.started")
     stop = threading.Event()
     signal.signal(signal.SIGINT, lambda *_: stop.set())
     signal.signal(signal.SIGTERM, lambda *_: stop.set())
     while not stop.is_set():
-        poll_once()
+        try:
+            poll_once()
+        except Exception as exc:  # noqa: BLE001 -- Poll boundary retries after transient failures without leaking secrets.
+            logger.error("worker.poll_failed", extra={"error_type": type(exc).__name__})
+            if args.once:
+                raise SystemExit(1) from None
         if args.once:
             return
         stop.wait(2)

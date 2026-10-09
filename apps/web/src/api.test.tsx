@@ -65,6 +65,9 @@ describe("original source reader", () => {
     expect(screen.getByText("<script>bad</script>").tagName).toBe("MARK");
     expect(document.querySelector("script")).toBeNull();
     expect(screen.getByText(/Before/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Jump to quotation" }),
+    ).toBeInTheDocument();
   });
   it("keeps invalid anchors unhighlighted instead of inventing a quote", () => {
     const { container } = render(

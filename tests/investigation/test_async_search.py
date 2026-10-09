@@ -73,6 +73,37 @@ def test_existing_search_id_fetches_archive_without_new_submission():
     assert batch["provider_search_id"] == "b" * 24
 
 
+def test_successful_news_search_with_no_results_is_completed_empty_discovery():
+    def respond(request):
+        return httpx.Response(
+            200,
+            json={
+                "search_metadata": {"id": "b" * 24, "status": "Success"},
+                "error": "Google News hasn't returned any results for this query.",
+            },
+        )
+
+    search = SerpApiSearch("test-secret", transport=httpx.MockTransport(respond), poll_interval=0)
+    batch = search.search("scoped opposing question", engine="google_news", provider_search_id="b" * 24)
+    assert batch["results"] == []
+    assert batch["provider_search_id"] == "b" * 24
+
+
+def test_other_success_error_is_not_misclassified_as_empty_discovery():
+    def respond(request):
+        return httpx.Response(
+            200,
+            json={
+                "search_metadata": {"id": "b" * 24, "status": "Success"},
+                "error": "Account limit exceeded",
+            },
+        )
+
+    search = SerpApiSearch("test-secret", transport=httpx.MockTransport(respond), poll_interval=0)
+    with pytest.raises(ValueError, match="SEARCH_PROVIDER_REJECTED_REQUEST"):
+        search.search("question", engine="google_news", provider_search_id="b" * 24)
+
+
 def test_worker_crash_after_ack_recovers_archive_without_new_charge(database, monkeypatch):
     search_id = "c" * 24
     crashed = False

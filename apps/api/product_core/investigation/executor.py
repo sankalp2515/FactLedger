@@ -15,12 +15,15 @@ from product_core.db import SessionLocal, set_workspace
 from product_core.domain.evidence import analyze, finding, ledger
 from product_core.domain.lineage import source_families
 from product_core.models import Evidence, Revision, Run, Source
+from product_core.observability import logger
 
 from . import leases
+from .accounting import model_cost
 from .acquisition import acquire
 from .fixtures import fixture_for_claim
-from .model import SYSTEM, StructuredModel
+from .model import SYSTEM, StructuredModel, prepare_input
 from .search import SerpApiSearch, plan_queries
+from .selection import canonical_url, select_discovery
 from .storage import store_document
 
 Fenced = leases.Fenced
@@ -463,19 +466,15 @@ def _analyze_source(lease, source, claims, mode, settings, model=None):
                 path = session.get(Source, source["id"]).text_path
             text = (Path(settings.artifact_dir) / path).read_text(encoding="utf-8")
             document = {"id": source["id"], "text": text}
-            input_tokens = (
-                len(
-                    json.dumps(
-                        {"claim": claim, "document": {"id": source["id"], "text": text[:24000]}},
-                        ensure_ascii=False,
-                    ).encode()
-                )
-                + len(SYSTEM.encode())
-                + 200
-            )
+            input_tokens = len(prepare_input(claim, document)[0].encode()) + len(SYSTEM.encode()) + 200
             reserved_tokens = input_tokens + 2500
+            pricing = _snapshot(lease)["plan"].get("pricing") or {
+                "llm_input_usd_per_million": settings.llm_input_usd_per_million,
+                "llm_output_usd_per_million": settings.llm_output_usd_per_million,
+            }
             reserved_usd = (
-                input_tokens * settings.llm_input_usd_per_million + 2500 * settings.llm_output_usd_per_million
+                input_tokens * pricing["llm_input_usd_per_million"]
+                + 2500 * pricing["llm_output_usd_per_million"]
             ) / 1_000_000
 
             def extract(claim=claim, document=document):
@@ -483,8 +482,14 @@ def _analyze_source(lease, source, claims, mode, settings, model=None):
                 return {"candidates": result.candidates, "tokens": result.tokens, "metadata": result.metadata}
 
             outcome = _action(lease, action_key, {"tokens": reserved_tokens, "usd": reserved_usd}, extract)
-            if outcome and outcome.get("tokens"):
-                leases.settle(SessionLocal, lease, action_key, outcome, actual={"tokens": outcome["tokens"]})
+            if outcome and (
+                outcome.get("tokens") or model_cost(outcome.get("metadata", {}), pricing) is not None
+            ):
+                actual = {"tokens": outcome["tokens"]}
+                estimated_usd = model_cost(outcome.get("metadata", {}), pricing)
+                if estimated_usd is not None:
+                    actual["usd"] = estimated_usd
+                leases.settle(SessionLocal, lease, action_key, outcome, actual=actual)
         if outcome and outcome.get("candidates"):
             _persist_evidence(lease, claim, source, outcome["candidates"], outcome.get("metadata"))
 
@@ -539,11 +544,13 @@ def execute_run(run_id: str, workspace_id: str | None = None) -> None:
         update_run(lease, enforce_ceiling)
         model = None
         if snapshot["mode"] == "live":
-            key = settings.groq_api_key if settings.llm_provider == "groq" else settings.nvidia_api_key
+            provider = snapshot["plan"].get("pricing", {}).get("llm_provider", settings.llm_provider)
+            model_name = snapshot["plan"].get("pricing", {}).get("llm_model", settings.llm_model)
+            key = settings.groq_api_key if provider == "groq" else settings.nvidia_api_key
             if not settings.serpapi_api_key.get_secret_value() or not key.get_secret_value():
                 raise ValueError("LIVE_PROVIDERS_NOT_CONFIGURED")
             search = SerpApiSearch(settings.serpapi_api_key.get_secret_value())
-            model = StructuredModel(settings.llm_provider, key.get_secret_value(), settings.llm_model)
+            model = StructuredModel(provider, key.get_secret_value(), model_name)
         for source in snapshot["results"]["sources"]:
             if source.get("manual") and source["status"] == "ACQUIRED":
                 _action(
@@ -581,6 +588,7 @@ def execute_run(run_id: str, workspace_id: str | None = None) -> None:
                     document = fixture_for_claim(claim)
                     urls.append((f"fixture://{document.metadata['fixture_case']}", document))
             else:
+                discovery_batches = []
                 queries = (
                     snapshot["plan"].get("queries")
                     if round_number == 1
@@ -638,11 +646,32 @@ def execute_run(run_id: str, workspace_id: str | None = None) -> None:
                     batch = _action(
                         lease,
                         action_key,
-                        {"searches": 1, "usd": settings.serpapi_search_usd},
+                        {
+                            "searches": 1,
+                            "usd": snapshot["plan"]
+                            .get("pricing", {})
+                            .get("serpapi_search_usd", settings.serpapi_search_usd),
+                        },
                         discover,
                     )
                     if batch and batch.get("results"):
-                        urls.extend((r["url"], None) for r in batch["results"][:10])
+                        discovery_batches.append(batch)
+                selected = select_discovery(claims, discovery_batches)
+                urls.extend((row["url"], None) for row in selected)
+                update_run(
+                    lease,
+                    lambda session, run, round_number=round_number, selected=selected: leases.event(
+                        session,
+                        run,
+                        "DISCOVERY_SELECTION",
+                        {
+                            "round": round_number,
+                            "discovery_only": True,
+                            "reason": "Scope cues, original host signal, purpose interleaving and domain diversity; not evidence.",
+                            "selected": [row["selection"] for row in selected],
+                        },
+                    ),
+                )
             snapshot = _snapshot(lease)
             seen = set()
             for url, fixture in urls:
@@ -651,7 +680,15 @@ def execute_run(run_id: str, workspace_id: str | None = None) -> None:
                 seen.add(url)
                 if _stop(lease):
                     return
-                existing = next((s for s in _snapshot(lease)["results"]["sources"] if s["url"] == url), None)
+                canonical = canonical_url(url) if fixture is None else None
+                existing = next(
+                    (
+                        s
+                        for s in _snapshot(lease)["results"]["sources"]
+                        if s["url"] == url or (canonical is not None and canonical_url(s["url"]) == canonical)
+                    ),
+                    None,
+                )
                 if existing and existing["status"] != "ACQUIRED":
                     continue
                 source = existing
@@ -725,3 +762,11 @@ def execute_run(run_id: str, workspace_id: str | None = None) -> None:
     finally:
         stopped.set()
         thread.join(timeout=1)
+        try:
+            final = _snapshot(lease)
+            logger.info(
+                "run.finished",
+                extra={"run_id": run_id, "workspace_id": lease.workspace_id, "state": final["state"]},
+            )
+        except Exception:  # noqa: BLE001 -- Final diagnostic must not replace the durable job outcome.
+            logger.warning("run.final_state_unavailable", extra={"run_id": run_id})

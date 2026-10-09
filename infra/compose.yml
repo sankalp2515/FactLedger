@@ -1,6 +1,12 @@
 name: evidence-workspace
+x-service-logging: &service-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
 services:
   postgres:
+    logging: *service-logging
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: evidence
@@ -16,11 +22,14 @@ services:
       timeout: 3s
       retries: 20
   migrate:
+    logging: *service-logging
     image: evidence-workspace-migrate:latest
     build:
       context: ..
       dockerfile: infra/Dockerfile
-    env_file: ../.env
+    env_file:
+      - path: ../.env
+        required: false
     environment: &app-env
       DATABASE_URL: postgresql+psycopg://evidence:${LOCAL_DB_PASSWORD:-local-development-only}@postgres:5432/evidence
       ARTIFACT_DIR: /data/artifacts
@@ -31,11 +40,14 @@ services:
       postgres:
         condition: service_healthy
   api:
+    logging: *service-logging
     image: evidence-workspace-api:latest
     build:
       context: ..
       dockerfile: infra/Dockerfile
-    env_file: ../.env
+    env_file:
+      - path: ../.env
+        required: false
     read_only: true
     tmpfs: ["/tmp:size=128m,noexec,nosuid,nodev"]
     cap_drop: [ALL]
@@ -44,7 +56,7 @@ services:
     cpus: 2
     pids_limit: 128
     environment: *app-env
-    command: ["uvicorn", "product_core.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["uvicorn", "product_core.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
     ports:
       - "127.0.0.1:${APP_PORT:-8008}:8000"
     volumes:
@@ -59,11 +71,14 @@ services:
       retries: 12
     restart: unless-stopped
   worker:
+    logging: *service-logging
     image: evidence-workspace-worker:latest
     build:
       context: ..
       dockerfile: infra/Dockerfile
-    env_file: ../.env
+    env_file:
+      - path: ../.env
+        required: false
     read_only: true
     tmpfs: ["/tmp:size=128m,noexec,nosuid,nodev"]
     cap_drop: [ALL]

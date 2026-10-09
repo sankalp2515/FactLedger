@@ -38,6 +38,9 @@ import {
 } from "lucide-react";
 import { api, ApiError } from "./api";
 import { AnchorText } from "./AnchorText";
+import { BudgetFields, validBudget } from "./BudgetFields";
+import { PagedList } from "./PagedList";
+import { createPortal } from "react-dom";
 import { EvidenceComparison } from "./EvidenceComparison";
 import { SourceFamilies } from "./SourceFamilies";
 import { scopeInput } from "./scope";
@@ -294,11 +297,16 @@ function LibraryPage() {
     [state, setState] = useState(""),
     [archived, setArchived] = useState(false),
     [cursor, setCursor] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search), 250);
+    return () => window.clearTimeout(timer);
+  }, [search]);
   const list = useQuery({
-    queryKey: ["cases", search, state, archived, cursor],
+    queryKey: ["cases", debouncedSearch, state, archived, cursor],
     queryFn: () =>
       api.get<{ items: CaseItem[]; next_cursor: string | null }>(
-        `/cases?${new URLSearchParams({ search, state, archived: String(archived), cursor, limit: "25" })}`,
+        `/cases?${new URLSearchParams({ search: debouncedSearch, state, archived: String(archived), cursor, limit: "4" })}`,
       ),
   });
   return (
@@ -462,7 +470,9 @@ function Workbench() {
   const tab = params.get("tab") ?? "evidence";
   const selected = params.get("evidence");
   const [modal, setModal] = useState("");
+  const [correctionField, setCorrectionField] = useState("event_date");
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [budget, setBudget] = useState<Record<string, number>>({});
   const [mode, setMode] = useState("fixture");
   const [format, setFormat] = useState("md");
   const [exportUrl, setExportUrl] = useState("");
@@ -480,11 +490,19 @@ function Workbench() {
     queryKey: ["run", runId],
     queryFn: () => api.get<Run>(`/runs/${runId}`),
     enabled: !!runId,
-    refetchInterval: runId ? 2500 : false,
+    refetchInterval: (query) =>
+      ["COMPLETED", "FAILED", "CANCELLED", "PARTIAL"].includes(
+        query.state.data?.state ?? "",
+      )
+        ? false
+        : 2500,
   });
   const m = useCommand<CaseDetail>();
   const integration = useCommand<CaseDetail>(() => nav(`/cases/${id}`));
-  const planning = useCommand<Plan>((p) => setPlan(p));
+  const planning = useCommand<Plan>((p) => {
+    setPlan(p);
+    setBudget(p.budget);
+  });
   const start = useCommand<Run>((r) => {
     setModal("");
     nav(`/cases/${id}/runs/${r.id}`);
@@ -561,13 +579,23 @@ function Workbench() {
               )}
             </div>
             <h1>{c.title}</h1>
-            <p className="original-claim">“{c.original_claim}”</p>
+            <details className="claim-disclosure">
+              <summary>Original claim</summary>
+              <p className="original-claim" tabIndex={0}>
+                “{c.original_claim}”
+              </p>
+            </details>
           </div>
           <div className="header-actions">
             {!readonly && (
-              <button className="primary" onClick={() => setModal("research")}>
+              <button
+                className="primary"
+                onClick={() =>
+                  setModal(c.payload.claims.length ? "research" : "scope")
+                }
+              >
                 <Search size={16} />
-                Investigate
+                {c.payload.claims.length ? "Investigate" : "Confirm claim"}
               </button>
             )}
             <button onClick={() => setModal("export")}>
@@ -640,63 +668,111 @@ function Workbench() {
       </div>
       <div className="workbench-grid">
         <aside className="claim-rail">
-          <div className="section-head">
-            <h2>Confirmed scope</h2>
-            {!readonly && (
-              <button className="text-button" onClick={() => setModal("scope")}>
-                Edit
-              </button>
-            )}
-          </div>
-          {!(p.claims ?? []).length ? (
-            <p className="muted">
-              Confirm the subject, period and stage before starting research.
-            </p>
-          ) : (
-            p.claims.map((cl, i) => (
-              <div className="claim" key={cl.id ?? i}>
-                <h3>{cl.text}</h3>
-                <dl>
-                  {[
-                    ["Subject", cl.subject],
-                    ["Geography", cl.geography],
-                    ["Period", cl.period],
-                    ["Asserted stage", pretty(cl.stage)],
-                    ["Measure", pretty(cl.measure)],
-                    ["Value", `${cl.value ?? "Unknown"} ${cl.unit ?? ""}`],
-                    ["Denominator", cl.denominator],
-                    ["Attribution", cl.attribution],
-                  ].map(([k, v]) => (
-                    <div key={String(k)}>
-                      <dt>{k}</dt>
-                      <dd>{v || "Unknown"}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            ))
-          )}
-          <div className="rail-bottom">
-            <p className="muted">Case record</p>
-            <button onClick={() => choose("tab", "history")}>
-              Revision history
-            </button>
-            {!readonly && (
-              <>
-                <button onClick={() => setModal("metadata")}>
-                  Edit details
+          <details className="scope-details">
+            <summary>
+              Confirmed scope{" "}
+              <span>
+                {p.claims?.length
+                  ? `${p.claims[0].geography} · ${p.claims[0].period}`
+                  : "Not confirmed"}
+              </span>
+            </summary>
+            <div className="section-head">
+              <h2>Confirmed scope</h2>
+              {!readonly && (
+                <button
+                  className="text-button"
+                  onClick={() => setModal("scope")}
+                >
+                  Edit
                 </button>
-                <button onClick={() => setModal("delete")}>Delete case</button>
-                <CommandState m={deleting} />
-              </>
+              )}
+            </div>
+            {!(p.claims ?? []).length ? (
+              <p className="muted">
+                Confirm the subject, period and stage before starting research.
+              </p>
+            ) : (
+              p.claims.map((cl, i) => (
+                <div className="claim" key={cl.id ?? i}>
+                  <h3>{cl.text}</h3>
+                  <dl>
+                    {[
+                      ["Subject", cl.subject],
+                      ["Geography", cl.geography],
+                      ["Period", cl.period],
+                      ["Asserted stage", pretty(cl.stage)],
+                      ["Measure", pretty(cl.measure)],
+                      ["Value", `${cl.value ?? "Unknown"} ${cl.unit ?? ""}`],
+                      ["Denominator", cl.denominator],
+                      ["Attribution", cl.attribution],
+                    ].map(([k, v]) => (
+                      <div key={String(k)}>
+                        <dt>{k}</dt>
+                        <dd>{v || "Unknown"}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ))
             )}
-          </div>
+          </details>
+          <details className="case-tools">
+            <summary>Case actions</summary>
+            <div className="rail-bottom">
+              <p className="muted">Case record</p>
+              <button onClick={() => choose("tab", "history")}>
+                Revision history
+              </button>
+              {!readonly && (
+                <>
+                  <button onClick={() => setModal("metadata")}>
+                    Edit details
+                  </button>
+                  <button onClick={() => setModal("delete")}>
+                    Delete case
+                  </button>
+                  <CommandState m={deleting} />
+                </>
+              )}
+            </div>
+          </details>
         </aside>
         <section className="evidence-center">
+          <label className="view-switcher">
+            Case view
+            <select
+              value={tab}
+              onChange={(event) => choose("tab", event.target.value)}
+            >
+              {[
+                "evidence",
+                "families",
+                "sources",
+                "stages",
+                "funding",
+                "metrics",
+                "gaps",
+                "notes",
+                "review",
+                "history",
+                "activity",
+              ].map((view) => (
+                <option key={view} value={view}>
+                  {view === "review"
+                    ? "Conclusion"
+                    : view === "stages"
+                      ? "Delivery stages"
+                      : pretty(view)}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="tabs" role="tablist" aria-label="Case record">
             {[
               "evidence",
               "families",
+              "sources",
               "stages",
               "funding",
               "metrics",
@@ -752,6 +828,7 @@ function Workbench() {
             ))}
           </div>
           <div
+            key={`${c.id}:${tab}`}
             className="tab-content"
             role="tabpanel"
             id="case-tab-panel"
@@ -782,29 +859,55 @@ function Workbench() {
                   </Empty>
                 ) : (
                   <div className="evidence-list">
-                    {evidence.map((e) => (
-                      <button
-                        key={e.id}
-                        className={`evidence-card ${selected === e.id ? "selected" : ""}`}
-                        onClick={() => choose("evidence", e.id)}
-                      >
-                        <div className="evidence-meta">
-                          <Relation
-                            value={String(e.override?.relation ?? e.relation)}
-                          />
-                          <span>
-                            {p.sources.find((s) => s.id === e.source_id)
-                              ?.title ?? "Source document"}
+                    <PagedList
+                      key={c.id}
+                      label="Evidence"
+                      items={evidence}
+                      renderItem={(e) => (
+                        <button
+                          key={e.id}
+                          className={`evidence-card ${selected === e.id ? "selected" : ""}`}
+                          onClick={() => choose("evidence", e.id)}
+                        >
+                          <div className="evidence-meta">
+                            <Relation
+                              value={String(e.override?.relation ?? e.relation)}
+                            />
+                            <span>
+                              {p.sources.find((s) => s.id === e.source_id)
+                                ?.title ?? "Source document"}
+                            </span>
+                            <ArrowUpRight size={16} />
+                          </div>
+                          <blockquote className="record-preview">
+                            {e.quote}
+                          </blockquote>
+                          <p className="record-preview">{e.rationale}</p>
+                          <span className="record-open">
+                            Read source and comparison{" "}
+                            <ChevronRight size={14} />
                           </span>
-                          <ArrowUpRight size={16} />
-                        </div>
-                        <blockquote>{e.quote}</blockquote>
-                        <p>{e.rationale}</p>
-                        <EvidenceComparison comparison={e.comparison ?? {}} />
-                      </button>
-                    ))}
+                        </button>
+                      )}
+                    />
                   </div>
                 )}
+              </>
+            )}
+            {tab === "sources" && (
+              <>
+                <div className="section-head">
+                  <h2>
+                    Original sources{" "}
+                    <span className="muted">{p.sources.length}</span>
+                  </h2>
+                  {!readonly && (
+                    <button onClick={() => setModal("source")}>
+                      <Plus size={16} />
+                      Add source
+                    </button>
+                  )}
+                </div>
                 <Sources
                   sources={p.sources ?? []}
                   onSelect={(source) => {
@@ -848,17 +951,21 @@ function Workbench() {
                     </p>
                   </Empty>
                 ) : (
-                  p.ledger.gaps.map((g, i) => (
-                    <div className="gap" key={i}>
-                      <AlertCircle size={20} />
-                      <div>
-                        <h3>{pretty(g.type)}</h3>
-                        <p>{pretty(g.reason)}</p>
-                        <strong>Next evidence needed</strong>
-                        <p>{pretty(g.next_evidence_needed)}</p>
+                  <PagedList
+                    label="Gaps"
+                    items={p.ledger.gaps}
+                    renderItem={(g, i) => (
+                      <div className="gap" key={i}>
+                        <AlertCircle size={20} />
+                        <div>
+                          <h3>{pretty(g.type)}</h3>
+                          <p>{pretty(g.reason)}</p>
+                          <strong>Next evidence needed</strong>
+                          <p>{pretty(g.next_evidence_needed)}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    )}
+                  />
                 )}
               </>
             )}
@@ -868,30 +975,33 @@ function Workbench() {
             {tab === "activity" && <Activity run={run} />}
           </div>
         </section>
-        <aside
-          className={`source-reader ${selectedEvidence || params.get("source") ? "reader-open" : ""}`}
-        >
-          <Reader
-            evidence={selectedEvidence}
-            sourceId={
-              selectedEvidence?.source_id ?? params.get("source") ?? undefined
-            }
-            source={p.sources?.find(
-              (x) =>
-                x.id === (selectedEvidence?.source_id ?? params.get("source")),
-            )}
-            revision={c.revision}
-            readonly={readonly}
+        {(selectedEvidence || params.get("source")) && (
+          <Dialog
+            title="Inspect original source"
             onClose={() =>
               setParams((old) => {
-                const n = new URLSearchParams(old);
-                n.delete("source");
-                n.delete("evidence");
-                return n;
+                const next = new URLSearchParams(old);
+                next.delete("source");
+                next.delete("evidence");
+                return next;
               })
             }
-          />
-        </aside>
+          >
+            <Reader
+              evidence={selectedEvidence}
+              sourceId={
+                selectedEvidence?.source_id ?? params.get("source") ?? undefined
+              }
+              source={p.sources?.find(
+                (x) =>
+                  x.id ===
+                  (selectedEvidence?.source_id ?? params.get("source")),
+              )}
+              revision={c.revision}
+              readonly={readonly}
+            />
+          </Dialog>
+        )}
       </div>
       {modal && (
         <Dialog
@@ -944,14 +1054,7 @@ function Workbench() {
                       </div>
                     ))}
                   </div>
-                  <div className="budget-grid">
-                    {Object.entries(plan.budget).map(([k, v]) => (
-                      <div key={k}>
-                        <span>{pretty(k)}</span>
-                        <strong>{v}</strong>
-                      </div>
-                    ))}
-                  </div>
+                  <BudgetFields budget={budget} onChange={setBudget} />
                   <label className="field">
                     Investigation mode
                     <select
@@ -979,11 +1082,11 @@ function Workbench() {
                   )}
                   <button
                     className="primary"
-                    disabled={start.isPending}
+                    disabled={start.isPending || !validBudget(budget)}
                     onClick={() =>
                       start.mutate({
                         path: `${path}/runs`,
-                        body: { ...expected, plan_id: plan.id, mode },
+                        body: { ...expected, plan_id: plan.id, mode, budget },
                       })
                     }
                   >
@@ -1107,12 +1210,7 @@ function Workbench() {
               onSubmit={(e) => {
                 e.preventDefault();
                 const f = new FormData(e.currentTarget);
-                let corrected: RecordData;
-                try {
-                  corrected = JSON.parse(String(f.get("fields")));
-                } catch {
-                  return;
-                }
+                const corrected = { [correctionField]: String(f.get("value")) };
                 m.mutate({
                   path: `${path}/ledger-overrides`,
                   body: {
@@ -1124,15 +1222,55 @@ function Workbench() {
                 });
               }}
             >
-              <Field label="Observation ID" name="observation" required />
               <label className="field">
-                Corrected fields (JSON)
-                <textarea
-                  name="fields"
-                  defaultValue={'{"event_date":""}'}
+                Observation
+                <select name="observation" required>
+                  {[
+                    ...p.ledger.stages,
+                    ...p.ledger.funding,
+                    ...p.ledger.metrics,
+                  ]
+                    .filter((o) => o.id)
+                    .map((o) => (
+                      <option key={String(o.id)} value={String(o.id)}>
+                        {String(
+                          o.stage ?? o.measure ?? o.kind ?? "Observation",
+                        )}{" "}
+                        /{" "}
+                        {String(
+                          o.event_date ?? o.reference_period ?? "Undated",
+                        )}{" "}
+                        / {String(o.id).slice(0, 8)}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <label className="field">
+                Corrected field
+                <select
+                  value={correctionField}
+                  onChange={(e) => setCorrectionField(e.target.value)}
+                >
+                  <option value="event_date">Event date</option>
+                  <option value="reference_period">Reference period</option>
+                  <option value="denominator">Denominator</option>
+                  <option value="attributed_to">Attribution</option>
+                  <option value="limitations">Limitations</option>
+                </select>
+              </label>
+              <label className="field">
+                Corrected value
+                <input
+                  key={correctionField}
+                  name="value"
+                  type={correctionField === "event_date" ? "date" : "text"}
                   required
                 />
               </label>
+              <p className="muted">
+                Only mapping metadata can be corrected. Stage or value changes
+                require source re-analysis.
+              </p>
               <Field label="Reason for correction" name="reason" required />
               <button className="primary" disabled={m.isPending}>
                 Save correction
@@ -1176,21 +1314,27 @@ function Dialog({
   children: ReactNode;
   onClose: () => void;
 }) {
+  const dialog = useRef<HTMLElement>(null);
   const closeRef = useRef(onClose);
   useEffect(() => {
     closeRef.current = onClose;
   }, [onClose]);
   useEffect(() => {
     const before = document.activeElement as HTMLElement;
-    const focus = document.querySelector(".dialog button") as HTMLElement;
+    const root = document.getElementById("root");
+    const previousInert = root?.inert ?? false;
+    const previousOverflow = document.body.style.overflow;
+    if (root) root.inert = true;
+    document.body.style.overflow = "hidden";
+    const focus = dialog.current?.querySelector("button") as HTMLElement;
     focus?.focus();
     const esc = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeRef.current();
       if (e.key === "Tab") {
         const items = Array.from(
-          document.querySelectorAll<HTMLElement>(
-            ".dialog button,.dialog input,.dialog textarea,.dialog select,.dialog a",
-          ),
+          dialog.current?.querySelectorAll<HTMLElement>(
+            'button,input,textarea,select,a[href],[tabindex="0"]',
+          ) ?? [],
         ).filter((x) => !x.hasAttribute("disabled"));
         const first = items[0],
           last = items.at(-1);
@@ -1206,16 +1350,19 @@ function Dialog({
     document.addEventListener("keydown", esc);
     return () => {
       document.removeEventListener("keydown", esc);
+      if (root) root.inert = previousInert;
+      document.body.style.overflow = previousOverflow;
       before?.focus();
     };
   }, []);
-  return (
+  return createPortal(
     <div className="modal-backdrop">
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
         className="dialog"
+        ref={dialog}
       >
         <div className="section-head">
           <h2 id="dialog-title">{title}</h2>
@@ -1225,7 +1372,8 @@ function Dialog({
         </div>
         {children}
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
 function ScopeForm({ c, onDone }: { c: CaseDetail; onDone: () => void }) {
@@ -1459,19 +1607,20 @@ function Sources({
 }) {
   return (
     <div className="sources-list">
-      <h3>
-        Original sources <span className="muted">{sources.length}</span>
-      </h3>
-      {sources.map((s) => (
-        <button key={s.id} onClick={() => onSelect(s)}>
-          <FileText size={17} />
-          <div>
-            {s.title}
-            <small>{pretty(s.status)}</small>
-          </div>
-          <ChevronRight size={15} />
-        </button>
-      ))}
+      <PagedList
+        label="Sources"
+        items={sources}
+        renderItem={(s) => (
+          <button key={s.id} onClick={() => onSelect(s)}>
+            <FileText size={17} />
+            <div>
+              {s.title}
+              <small>{pretty(s.status)}</small>
+            </div>
+            <ChevronRight size={15} />
+          </button>
+        )}
+      />
     </div>
   );
 }
@@ -1481,14 +1630,12 @@ function Reader({
   source,
   revision,
   readonly,
-  onClose,
 }: {
   evidence?: Evidence;
   sourceId?: string;
   source?: Source;
   revision: number;
   readonly: boolean;
-  onClose: () => void;
 }) {
   const read = useQuery({
     queryKey: ["source", sourceId],
@@ -1515,12 +1662,6 @@ function Reader({
   const meta = doc?.metadata ?? doc?.metadata_json ?? {};
   return (
     <>
-      <div className="reader-toolbar">
-        <h2>Source reader</h2>
-        <button aria-label="Close source reader" onClick={onClose}>
-          <X size={17} />
-        </button>
-      </div>
       {read.isPending ? (
         <Loading />
       ) : read.error ? (
@@ -1566,57 +1707,59 @@ function Reader({
               Download original
             </a>
           </div>
-          {evidence && (
-            <div className="reader-analysis">
-              <Relation
-                value={String(evidence.override?.relation ?? evidence.relation)}
-              />
-              <p>{evidence.rationale}</p>
-              {!readonly && (
-                <button onClick={() => setCorrect((x) => !x)}>
-                  Correct evidence relation
-                </button>
-              )}
-              {correct && (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const f = new FormData(e.currentTarget);
-                    m.mutate({
-                      path: `/evidence/${evidence.id}/relation`,
-                      method: "PATCH",
-                      body: {
-                        expected_revision: revision,
-                        relation: f.get("relation"),
-                        reason: f.get("reason"),
-                      },
-                    });
-                  }}
-                >
-                  <label className="field">
-                    Relation
-                    <select name="relation" defaultValue={evidence.relation}>
-                      {[
-                        "SUPPORTS",
-                        "CONTRADICTS",
-                        "CONTEXT",
-                        "INCOMPARABLE",
-                        "INSUFFICIENT",
-                      ].map((x) => (
-                        <option key={x}>{x}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <Field name="reason" label="Reason for correction" required />
-                  <button className="primary" disabled={m.isPending}>
-                    Save correction
-                  </button>
-                  <CommandState m={m} />
-                </form>
-              )}
-            </div>
-          )}
         </>
+      )}
+      {evidence && (
+        <div className="reader-analysis">
+          <Relation
+            value={String(evidence.override?.relation ?? evidence.relation)}
+          />
+          <blockquote>{evidence.quote}</blockquote>
+          <p>{evidence.rationale}</p>
+          <EvidenceComparison comparison={evidence.comparison ?? {}} />
+          {!readonly && (
+            <button onClick={() => setCorrect((x) => !x)}>
+              Correct evidence relation
+            </button>
+          )}
+          {correct && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const f = new FormData(e.currentTarget);
+                m.mutate({
+                  path: `/evidence/${evidence.id}/relation`,
+                  method: "PATCH",
+                  body: {
+                    expected_revision: revision,
+                    relation: f.get("relation"),
+                    reason: f.get("reason"),
+                  },
+                });
+              }}
+            >
+              <label className="field">
+                Relation
+                <select name="relation" defaultValue={evidence.relation}>
+                  {[
+                    "SUPPORTS",
+                    "CONTRADICTS",
+                    "CONTEXT",
+                    "INCOMPARABLE",
+                    "INSUFFICIENT",
+                  ].map((x) => (
+                    <option key={x}>{x}</option>
+                  ))}
+                </select>
+              </label>
+              <Field name="reason" label="Reason for correction" required />
+              <button className="primary" disabled={m.isPending}>
+                Save correction
+              </button>
+              <CommandState m={m} />
+            </form>
+          )}
+        </div>
       )}
     </>
   );
@@ -1699,15 +1842,23 @@ function Notes({ c, readonly }: { c: CaseDetail; readonly: boolean }) {
         Keep field observations and editorial judgment attributed separately
         from collected records.
       </p>
-      {c.payload.notes.map((n, i) => (
-        <article className="note" key={i}>
-          <p>{String(n.text)}</p>
-          <small>
-            {String(n.attribution ?? "Unattributed")} ·{" "}
-            {date(n.created_at as string)}
-          </small>
-        </article>
-      ))}
+      <PagedList
+        label="Notes"
+        items={c.payload.notes}
+        renderItem={(n, i) => (
+          <details className="note" key={i}>
+            <summary>
+              {String(n.attribution ?? "Unattributed")} ·{" "}
+              {date(n.created_at as string)}
+            </summary>
+            <p>{String(n.text)}</p>
+            <small>
+              {String(n.attribution ?? "Unattributed")} ·{" "}
+              {date(n.created_at as string)}
+            </small>
+          </details>
+        )}
+      />
       {!readonly && (
         <form
           className="form"
@@ -1830,19 +1981,25 @@ function History({ id, revision }: { id: string; revision: number }) {
       ) : history.error ? (
         <ErrorNotice error={history.error} />
       ) : (
-        history.data?.items.map((r) => (
-          <Link
-            className="review-link"
-            key={String(r.id ?? r.number)}
-            to={`/cases/${id}/revisions/${r.number ?? r.revision}`}
-          >
-            Revision {String(r.number ?? r.revision)}
-            <span className="muted">{date(r.created_at as string)}</span>
-          </Link>
-        ))
+        <PagedList
+          label="Revisions"
+          items={history.data?.items ?? []}
+          pageSize={5}
+          renderItem={(r) => (
+            <Link
+              className="review-link"
+              key={String(r.id ?? r.number)}
+              to={`/cases/${id}/revisions/${r.number ?? r.revision}`}
+            >
+              Revision {String(r.number ?? r.revision)}
+              <span className="muted">{date(r.created_at as string)}</span>
+            </Link>
+          )}
+        />
       )}
       {revision > 1 && (
-        <>
+        <details className="event-history">
+          <summary>Compare revisions</summary>
           <label className="field">
             Compare with revision
             <select
@@ -1861,12 +2018,13 @@ function History({ id, revision }: { id: string; revision: number }) {
           ) : (
             <RevisionChanges data={diff.data} />
           )}
-        </>
+        </details>
       )}
     </>
   );
 }
 function Activity({ run }: { run?: Run | null }) {
+  const [eventFilter, setEventFilter] = useState("all");
   if (!run)
     return (
       <Empty title="Research has not started.">
@@ -1897,26 +2055,85 @@ function Activity({ run }: { run?: Run | null }) {
           ? "Costs are estimated; unknown provider outcomes retain reservations."
           : "Usage is recorded by the investigation service."}
       </p>
-      <ol className="activity">
-        {run.events?.map((e) => (
-          <li key={e.seq}>
-            <span className="event-dot" />
-            <div>
-              <strong>{pretty(e.type)}</strong>
-              <p>
-                {String(
-                  e.payload.message ??
-                    e.payload.reason ??
-                    e.payload.query ??
-                    e.payload.status ??
-                    "Investigation checkpoint recorded.",
+      {run.costs && (
+        <section aria-label="Provider cost estimates">
+          <h3>Provider cost estimates · USD</h3>
+          <p>
+            Configured-rate estimates, not verified invoices. Unknown outcomes
+            keep their reservations.
+          </p>
+          <div className="budget-grid">
+            {Object.entries(run.costs.providers).map(([provider, cost]) => (
+              <div key={provider}>
+                <span>{provider}</span>
+                <strong>${cost.usd.toFixed(6)}</strong>
+                <small>{cost.attempts} attempts</small>
+                {provider !== "serpapi" && (
+                  <small>
+                    {cost.prompt_tokens} input / {cost.completion_tokens} output
+                    tokens reported across {cost.reported_usage_calls} calls
+                  </small>
                 )}
-              </p>
-              <small>{date(e.created_at)}</small>
-            </div>
-          </li>
-        ))}
-      </ol>
+              </div>
+            ))}
+          </div>
+          <p className="muted">
+            Uncertain reserved cost: $
+            {run.costs.uncertain_reserved_usd.toFixed(6)}
+          </p>
+        </section>
+      )}
+      <details className="event-history">
+        <summary>Run event history ({run.events?.length ?? 0})</summary>
+        <label className="field">
+          Show events
+          <select
+            value={eventFilter}
+            onChange={(event) => setEventFilter(event.target.value)}
+          >
+            <option value="all">All events, newest first</option>
+            <option value="errors">Errors and incomplete outcomes</option>
+          </select>
+        </label>
+        <PagedList
+          key={eventFilter}
+          label="Events"
+          pageSize={8}
+          as="ol"
+          items={(run.events ?? [])
+            .filter(
+              (event) =>
+                eventFilter === "all" ||
+                /ERROR|FAILED|PARTIAL|UNKNOWN|UNAVAILABLE|EXHAUSTED|CANCELLED/.test(
+                  event.type.toUpperCase(),
+                ),
+            )
+            .slice()
+            .reverse()}
+          renderItem={(e) => (
+            <li key={e.seq}>
+              <span className="event-dot" />
+              <div>
+                <strong>{pretty(e.type)}</strong>
+                <p>
+                  {String(
+                    e.payload.message ??
+                      e.payload.reason ??
+                      e.payload.error ??
+                      e.payload.query ??
+                      e.payload.status ??
+                      "Investigation checkpoint recorded.",
+                  )}
+                </p>
+                {typeof e.payload.advice === "string" && (
+                  <p>{e.payload.advice}</p>
+                )}
+                <small>{date(e.created_at)}</small>
+              </div>
+            </li>
+          )}
+        />
+      </details>
     </>
   );
 }
@@ -1948,25 +2165,31 @@ function Reviews() {
           </p>
         </Empty>
       ) : (
-        list.data.items.map((r) => (
-          <Link className="case-row" key={r.id} to={`/reviews/${r.id}`}>
-            <ClipboardCheck size={23} />
-            <div className="case-text">
-              <h2>
-                Case {r.case_id.slice(0, 8)} · Revision {r.revision}
-              </h2>
-              <p>{r.conclusion}</p>
-            </div>
-            <Badge>{pretty(r.status)}</Badge>
-            <ChevronRight size={20} />
-          </Link>
-        ))
+        <PagedList
+          label="Reviews"
+          items={list.data.items}
+          pageSize={5}
+          renderItem={(r) => (
+            <Link className="case-row" key={r.id} to={`/reviews/${r.id}`}>
+              <ClipboardCheck size={23} />
+              <div className="case-text">
+                <h2>
+                  Case {r.case_id.slice(0, 8)} · Revision {r.revision}
+                </h2>
+                <p>{r.conclusion}</p>
+              </div>
+              <Badge>{pretty(r.status)}</Badge>
+              <ChevronRight size={20} />
+            </Link>
+          )}
+        />
       )}
     </div>
   );
 }
 function ReviewPage() {
   const [inspected, setInspected] = useState<Evidence | null>(null);
+  const [reviewSection, setReviewSection] = useState("Conclusion");
   const { requestId } = useParams();
   const s = useSession();
   const read = useQuery({
@@ -1999,7 +2222,7 @@ function ReviewPage() {
             <Badge>{pretty(r.status)}</Badge>
             <span>Frozen revision {r.revision}</span>
           </div>
-          <h1>Read. Challenge. Decide.</h1>
+          <h1>Review case {r.case_id.slice(0, 8)}</h1>
           <p className="intro">
             This submission preserves the evidence and conclusion as reviewed.
             New case edits require a new review.
@@ -2011,49 +2234,95 @@ function ReviewPage() {
       </div>
       <div className="review-layout">
         <section className="panel review-record">
-          <h2>Submitted conclusion</h2>
-          <blockquote className="conclusion">
-            {r.conclusion || p?.conclusion}
-          </blockquote>
-          <h2>Collected evidence</h2>
-          {p?.evidence
-            .slice()
-            .sort(
-              (a, b) =>
-                Number(b.relation === "CONTRADICTS") -
-                Number(a.relation === "CONTRADICTS"),
-            )
-            .map((e) => (
-              <article className="evidence-card" key={e.id}>
-                <Relation value={e.relation} />
-                <blockquote>{e.quote}</blockquote>
-                <p>{e.rationale}</p>
-                <EvidenceComparison comparison={e.comparison} />
-                <button onClick={() => setInspected(e)}>
-                  Inspect cited source
-                </button>
-                <a href={`/v1/sources/${e.source_id}/download`}>
-                  Download cited original
-                </a>
-              </article>
+          <div className="segmented" aria-label="Review sections">
+            {["Conclusion", "Evidence", "Gaps"].map((section) => (
+              <button
+                key={section}
+                aria-pressed={reviewSection === section}
+                onClick={() => setReviewSection(section)}
+              >
+                {section}
+              </button>
             ))}
-          <h2>Unresolved gaps</h2>
-          {p?.ledger?.gaps.map((g, i) => (
-            <p className="notice" key={i}>
-              {pretty(g.reason)} — {pretty(g.next_evidence_needed)}
-            </p>
-          ))}
+          </div>
+          {reviewSection === "Conclusion" && (
+            <>
+              <h2>Submitted conclusion</h2>
+              <blockquote className="conclusion">
+                {r.conclusion || p?.conclusion}
+              </blockquote>
+              <p className="muted">
+                Inspect {p?.evidence.length ?? 0} evidence records and the gaps
+                before recording a decision.
+              </p>
+            </>
+          )}
+          {reviewSection === "Evidence" && (
+            <>
+              <h2>Collected evidence</h2>
+              <PagedList
+                label="Review evidence"
+                pageSize={2}
+                items={(p?.evidence ?? [])
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      Number(b.relation === "CONTRADICTS") -
+                      Number(a.relation === "CONTRADICTS"),
+                  )}
+                renderItem={(e) => (
+                  <article className="evidence-card" key={e.id}>
+                    <Relation value={e.relation} />
+                    <blockquote className="record-preview">
+                      {e.quote}
+                    </blockquote>
+                    <p className="record-preview">{e.rationale}</p>
+                    <button onClick={() => setInspected(e)}>
+                      Inspect cited source
+                    </button>
+                    <a href={`/v1/sources/${e.source_id}/download`}>
+                      Download cited original
+                    </a>
+                  </article>
+                )}
+              />
+            </>
+          )}
+          {reviewSection === "Gaps" && (
+            <>
+              <h2>Unresolved gaps</h2>
+              <PagedList
+                label="Review gaps"
+                items={(p?.ledger?.gaps ?? []).filter((gap) => !gap.resolved)}
+                renderItem={(g, i) => (
+                  <p className="notice" key={i}>
+                    {pretty(g.reason)} — {pretty(g.next_evidence_needed)}
+                  </p>
+                )}
+              />
+              {!(p?.ledger?.gaps ?? []).some((gap) => !gap.resolved) && (
+                <p>
+                  No unresolved gap records. This is not proof of complete
+                  coverage.
+                </p>
+              )}
+            </>
+          )}
         </section>
         <section className="panel decision-panel">
           {inspected && (
-            <Reader
-              evidence={inspected}
-              sourceId={inspected.source_id}
-              source={p?.sources.find((x) => x.id === inspected.source_id)}
-              revision={r.revision}
-              readonly
+            <Dialog
+              title="Inspect reviewed source"
               onClose={() => setInspected(null)}
-            />
+            >
+              <Reader
+                evidence={inspected}
+                sourceId={inspected.source_id}
+                source={p?.sources.find((x) => x.id === inspected.source_id)}
+                revision={r.revision}
+                readonly
+              />
+            </Dialog>
           )}
           <h2>Editorial decision</h2>
           {!["editor", "owner"].includes(s.role.toLowerCase()) ? (

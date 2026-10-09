@@ -157,7 +157,10 @@ def detail(db, case, revision=None):
 
 
 def run_detail(db, run):
+    from .investigation.accounting import cost_summary
+
     result = serialize(run)
+    result["costs"] = cost_summary(run)
     result["events"] = [
         serialize(e)
         for e in db.scalars(select(RunEvent).where(RunEvent.run_id == run.id).order_by(RunEvent.seq))
@@ -320,7 +323,18 @@ def start_run(actor, case_id, data, key):
             case_id=case.id,
             base_revision=case.revision,
             mode=data["mode"],
-            plan={**plan.payload, "actor_id": actor.id},
+            plan={
+                **plan.payload,
+                "actor_id": actor.id,
+                "pricing": {
+                    "llm_provider": get_settings().llm_provider,
+                    "llm_model": get_settings().llm_model,
+                    "serpapi_search_usd": get_settings().serpapi_search_usd,
+                    "llm_input_usd_per_million": get_settings().llm_input_usd_per_million,
+                    "llm_output_usd_per_million": get_settings().llm_output_usd_per_million,
+                    "captured_at": now().isoformat(),
+                },
+            },
             budget=data["budget"],
             usage={
                 "searches": 0,
@@ -576,6 +590,8 @@ def delete_case(actor, case_id, revision):
 
 
 def export_case(actor, case_id, revision, format_):
+    from .investigation.accounting import cost_summary
+
     with transaction(actor) as db:
         case = case_for(db, actor, case_id)
         payload = snapshot(db, case, revision)
@@ -609,7 +625,14 @@ def export_case(actor, case_id, revision, format_):
             run = db.get(Run, run_id)
             if run and run.workspace_id == actor.workspace_id:
                 pack["runs"].append(
-                    {"id": run.id, "mode": run.mode, "plan": run.plan, "usage": run.usage, "state": run.state}
+                    {
+                        "id": run.id,
+                        "mode": run.mode,
+                        "plan": run.plan,
+                        "usage": run.usage,
+                        "state": run.state,
+                        "costs": cost_summary(run),
+                    }
                 )
         pack["manifest"] = {
             "payload_sha256": digest(pack),

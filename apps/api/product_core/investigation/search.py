@@ -2,12 +2,17 @@
 
 import re
 import time
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from urllib.parse import urlsplit
 
 import httpx
 
 ENGINES = {"google", "google_news", "google_scholar"}
+EMPTY_MESSAGES = {
+    "google": "Google hasn't returned any results for this query.",
+    "google_news": "Google News hasn't returned any results for this query.",
+    "google_scholar": "Google Scholar hasn't returned any results for this query.",
+}
 FORBIDDEN = {
     "api_key",
     "authorization",
@@ -90,12 +95,36 @@ def plan_queries(claims: list[dict], gaps: list[dict] | None = None, round_numbe
     result = []
     for claim in claims[:3]:
         subject = str(claim.get("subject") or claim.get("text", ""))[:300]
-        context = " ".join(str(claim[k]) for k in ("geography", "period") if claim.get(k))
-        target = str(claim.get("stage") or claim.get("measure") or "status").lower().replace("_", " ")
+        period = str(claim.get("period", ""))
+        if re.fullmatch(r"\d{4}-\d{2}", period):
+            try:
+                period = date.fromisoformat(period + "-01").strftime("%B %Y")
+            except ValueError:
+                pass
+        context = " ".join(str(v) for v in (claim.get("geography"), period) if v)
+        stage = claim.get("stage")
+        target = str(stage if stage and stage != "UNKNOWN" else claim.get("measure") or "status")
+        target = target.lower().replace("_", " ")
+        # The confirmed assertion can name the responsible actor or decision body.
+        # Retain that context without guessing an actor from the subject or source host.
+        assertion = str(claim.get("text") or "")[:500].strip()
+        primary_subject = assertion or subject
+        if assertion and subject.casefold() not in assertion.casefold():
+            primary_subject = f"{subject} {assertion}"
+        institution_scope = str(claim.get("geography", "")).strip().casefold() == "india" and bool(
+            re.search(
+                r"\b(?:(?:union|state|central)\s+cabinet|ministry\s+of|parliament|government\s+of)\b",
+                assertion,
+                re.IGNORECASE,
+            )
+        )
         if round_number == 1:
+            primary_query = _concise_query(f"{primary_subject} {context} {target} official report")
+            if institution_scope:
+                primary_query += " (site:gov.in OR site:nic.in)"
             templates = [
-                ("google", "PRIMARY_RECORD", f"{subject} {context} {target} official report"),
-                ("google_news", "OPPOSING", f"{subject} {context} {target} delay problems"),
+                ("google", "PRIMARY_RECORD", primary_query),
+                ("google_news", "OPPOSING", f"{subject} {context} {target} {_opposing_terms(claim)}"),
             ]
             if claim.get("measure") in {
                 "PLACED",
@@ -108,9 +137,17 @@ def plan_queries(claims: list[dict], gaps: list[dict] | None = None, round_numbe
                 )
         else:
             missing = [g["type"].lower() for g in (gaps or []) if g.get("claim_id") == claim["id"]]
-            keyword = " ".join(sorted(set(missing))) or "original primary record"
+            gap_terms = {
+                "opposing_coverage": _opposing_terms(claim),
+                "missing_comparable_evidence": "dated original primary record",
+                "stage_mismatch": "status dated record",
+                "denominator_missing": "total eligible population denominator",
+                "definition_missing": "definition measurement methodology",
+            }
+            keyword = " ".join(sorted({gap_terms.get(g, g.replace("_", " ")) for g in missing}))
+            keyword = keyword or "original primary record"
             templates = [
-                ("google", "STATUS", f"{subject} {context} {target} {keyword} record round {round_number}")
+                ("google", "STATUS", _concise_query(f"{primary_subject} {context} {target} {keyword}"))
             ]
         for engine, purpose, query in templates:
             result.append(
@@ -120,10 +157,50 @@ def plan_queries(claims: list[dict], gaps: list[dict] | None = None, round_numbe
                     "purpose": purpose,
                     "query": " ".join(query.split()),
                     "expected_evidence": "Dated original record with exact confirmed scope.",
-                    "rationale": "Target missing stage, scope, definition or opposing evidence.",
+                    "rationale": (
+                        "Discover original records for a named Indian public institution; host restriction is not evidence of truth."
+                        if purpose == "PRIMARY_RECORD" and institution_scope
+                        else "Target missing stage, scope, definition or opposing evidence."
+                    ),
                 }
             )
     return result
+
+
+def _concise_query(query):
+    """Keep actor/topic/numeric tokens once, omitting sentence glue from discovery queries."""
+    seen = set()
+    result = []
+    for token in re.findall(r"\d+(?:[.,]\d+)*|[^\W_]+", query, re.UNICODE):
+        key = token.casefold()
+        if key not in seen and key not in {"the", "a", "an", "of", "for", "in", "during", "and", "to"}:
+            result.append(token)
+            seen.add(key)
+    return " ".join(result)
+
+
+def _opposing_terms(claim):
+    return {
+        "ANNOUNCED": "withdrawn cancelled announcement disputed",
+        "APPROVED": "rejected cancelled sanction withdrawn",
+        "PROCURED": "tender cancelled procurement disputed contract withdrawn",
+        "UNDER_CONSTRUCTION": "stalled construction incomplete progress",
+        "PHYSICALLY_COMPLETED": "incomplete unfinished completion disputed",
+        "INAUGURATED": "inauguration cancelled postponed disputed",
+        "OPERATIONAL": "closed nonfunctional not operating",
+    }.get(
+        claim.get("stage"),
+        {
+            "ALLOCATED": "allocation withheld reduced funding shortfall",
+            "SANCTIONED": "sanction cancelled withdrawn funding shortfall",
+            "RELEASED": "funds withheld unreleased disbursement shortfall",
+            "EXPENDED": "unspent expenditure disputed underutilisation",
+            "PLACED": "unplaced placement disputed verification",
+            "EMPLOYED": "unemployment employment disputed verification",
+            "PAID_BENEFICIARIES": "unpaid excluded beneficiaries payment shortfall",
+            "SERVICE_FREQUENCY": "service cancelled reduced frequency",
+        }.get(claim.get("measure"), "disputed contrary record verification"),
+    )
 
 
 class SerpApiSearch:
@@ -149,6 +226,16 @@ class SerpApiSearch:
         }
         params["async"] = params.pop("async_")
         deadline = time.monotonic() + min(float(timeout), 55)
+
+        def rejected(payload):
+            # Successful empty discovery is not an unknown paid outcome or evidence of absence.
+            empty = (
+                payload.get("search_metadata", {}).get("status") == "Success"
+                and payload.get("error") == EMPTY_MESSAGES[engine]
+                and not parse_results(payload, engine, query)
+            )
+            return bool(payload.get("error") and not empty)
+
         with httpx.Client(timeout=20, transport=self.transport, follow_redirects=False) as client:
             try:
 
@@ -162,7 +249,7 @@ class SerpApiSearch:
                     if len(response.content) > 2_000_000:
                         raise ValueError("SEARCH_RESPONSE_LIMIT")
                     payload = response.json()
-                    if payload.get("error"):
+                    if rejected(payload):
                         raise ValueError("SEARCH_PROVIDER_REJECTED_REQUEST")
                     return payload
 
@@ -199,7 +286,7 @@ class SerpApiSearch:
                     raise ValueError("SEARCH_PROVIDER_TIMEOUT")
             except httpx.HTTPError:
                 raise ValueError("SEARCH_PROVIDER_NETWORK_ERROR") from None
-        if payload.get("error"):
+        if rejected(payload):
             raise ValueError("SEARCH_PROVIDER_REJECTED_REQUEST")
         safe = sanitize(payload)
         return {

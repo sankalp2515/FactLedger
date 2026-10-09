@@ -1,0 +1,4 @@
+# Includes the same services/volumes used by the existing local stack.
+name: evidence-workspace
+include:
+  - infra/compose.yml
