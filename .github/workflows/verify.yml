@@ -24,7 +24,7 @@ jobs:
       MODE: development
       SESSION_SECRET: integration-only-secret-not-production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v5
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -85,7 +85,7 @@ jobs:
       APP_PORT: '18008'
       DB_PORT: '15432'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build and start a fresh key-free stack
         run: |
           test ! -f .env
