@@ -1,12 +1,12 @@
 # FactLedger release readiness
 
-Assessment date: 8 October 2026. This record distinguishes repository preparation, a locally running hackathon demonstration and hosted production. It supersedes older branding and test totals. Tests described as synthetic are engineering checks, not independent human assessment.
+Updated: 9 October 2026. The original audit and measured checkpoints are retained below. The final supplied local checks passed: **149 backend regressions, 14 PostgreSQL evaluations, 19 frontend tests and Ruff across 61 files**. Runtime dependency audits reported zero known vulnerabilities at scan time. The final search-only approval case met its expected finding; see the latest report below. These are engineering checks, not independent human assessment or hosted-production evidence. Publication and remote CI remain pending.
 
 ## Release decision
 
 | Target | Decision | Conditions |
 |---|---|---|
-| GitHub repository | Prepared locally; publication pending | Owner supplies target repository/visibility and chooses a license. No remote or public URL is claimed. |
+| GitHub repository | Release authorized; publication verification pending | Destination [sankalp2515/FactLedger](https://github.com/sankalp2515/FactLedger), owner-selected [MIT License](../LICENSE); verify public access and remote CI after pushing. |
 | Hackathon submission | Worth submitting after final packaging | Publish accessible code, record an actual local workflow under three minutes, verify the video link privately and complete the official entry/disclosure. |
 | Public hosted production | **No-go today** | Hosted identity/TLS, restricted-role deployment, operational alerts, durable deletion-ledger replication, restore objectives and load testing need deployment evidence. |
 
@@ -74,8 +74,60 @@ Suggested pre-submission priorities: (1) rehearse a concise live case and a labe
 
 ## Repository packaging
 
-README, setup/API guide, architecture/PRD, contributing workflow, security policy, changelog, CI, issue/PR templates, operational/backup guides, evaluation protocol and submission disclosure are present. The README presentation draws on structural patterns from [FastAPI](https://github.com/fastapi/fastapi/blob/master/README.md), [Immich](https://github.com/immich-app/immich/blob/main/README.md) and [PostHog](https://github.com/PostHog/posthog/blob/master/README.md); product wording and claims are original. No CI badge, hosted demo, license or public repository is invented.
+README, setup/API guide, architecture/PRD, contributing workflow, security policy, changelog, CI, issue/PR templates, operational/backup guides, evaluation protocol and submission disclosure are present. The README presentation adapts structural patterns from [PraisonAI](https://github.com/MervinPraison/PraisonAI): a strong opening, concise setup, use cases, architecture and documentation links. Product wording and claims are original. The CI badge targets the actual `verify.yml` workflow on `main`; static badges identify Python, TypeScript and the owner-selected MIT license. A pending badge or configured repository URL is not proof of a completed remote check.
 
-Before pushing: run tracked/history secret checks and core-document link checks, inspect the final diff, add the owner's chosen license, configure the exact GitHub destination and run the remote CI after publication. `.env`, private artifacts, backups, local execution logs and generated dependencies remain excluded. Public screenshots and fixture exports must contain only explicitly synthetic data.
+Before pushing: run tracked/history secret checks and core-document link checks, inspect the final diff, configure the authorized GitHub destination and inspect remote CI after publication. `.env`, private artifacts, backups, local execution logs and generated dependencies remain excluded. Public screenshots and exports may contain labelled synthetic demonstrations or non-sensitive public-record cases; private provider payloads and participant details are excluded. MIT licensing covers the project's own materials, not third-party captured records.
 
 Official submission requirements and deadline are linked in [submission readiness](submission-readiness.md). This engineering assessment does not assert eligibility, acceptance or a prize.
+
+## Real-case walkthrough and accounting verification — 9 October 2026 IST
+
+The [manual testing guide](manual-testing.md) and README now include precise public-record use cases, a live PM-Surya Ghar approval walkthrough and a no-cost labelled fixture alternative. The root command `docker compose up --build -d` successfully built the frontend/API/worker, migrated PostgreSQL and started the whole stack. Existing volumes and private `.env` were retained. Optional `.env` permits fixture configuration without provider keys; Compose requires version 2.24+.
+
+Fresh checks: 115 backend regressions, 14 PostgreSQL evaluations and 15 frontend tests passed; Ruff lint/format, TypeScript/Vite build, frontend lint and Alembic drift checks passed. The actual API/worker fixture journey passed idempotency, quotation anchoring, independent local-role approval, immutable export after a draft edit and deleted-case download denial. Browser checks verified invalid USD disables Start, valid live limits enable it, exact manual source controls, review status and per-provider Activity display at the existing narrow browser viewport.
+
+Two bounded live SerpApi/Groq cases exercised source attachment, discovery, extraction, guarded quotations, integration, local-role review and JSON export. The retest `ea94e4db-2059-4a5b-97ce-aa88f842f8f1` recorded 2 searches, 4 document attempts, 11254 reported tokens, 33.465 seconds and $0.0272496 configured estimate with zero uncertain reservations. Three literal anchors and three original-download hashes passed; one external source was unavailable. No provider errors occurred on this retest. The initial run exposed a successful empty-news search being classified as failure; the exact successful-empty case is now covered by regression tests. Account errors and other provider failures still remain failures. An initial Groq HTTP 429 retained conservative budget reservations.
+
+**Quality limit:** both small runs remained partial at the document limit. The retest model selected contextual/subsidy evidence and produced subject/period gaps, so the finding stayed insufficient. A preserved official source does not guarantee a correct or complete model interpretation. Qualified editorial workflow success is not an automated accuracy benchmark. Both development reviewer identities were operated by the AI QA runner, not independent people. Public screenshots in this update contain only this public-record case and configured estimates; private provider payloads/packs remain ignored.
+
+Operational API/worker JSON logs and Docker 10 MB × 3 rotation were observed. Durable audit/run events remain in PostgreSQL. New runs pin pricing/provider/model; successful LLM input/output usage reconciles both tokens and estimated USD; pending and unknown outcomes remain visible reservations. The Activity panel, run API and frozen exports include provider breakdowns. Actual provider invoices, centralized log shipping/alert delivery, independent accuracy evaluation, OIDC production login and deployment gates remain unverified requirements for hosting.
+
+Independent read-only code review found no significant regression. Its pending-acknowledgment accounting observation was covered with a failing test and fixed so pending acknowledged searches contribute to uncertain reserved USD. Known-secret/history scanning and core-document link checks are required again before publishing.
+
+## Search-only approval quality test — 9 October 2026
+
+The first measured search-only approval run began with **no manual URL or attachment** and tested the claim “The Union Cabinet approved PM-Surya Ghar: Muft Bijli Yojana in February 2024.” The expected outcome was `SUPPORTED_BY_COLLECTED_EVIDENCE`. That expectation **failed**: the returned finding was `INSUFFICIENT_EVIDENCE`, with unresolved subject, period, stage and missing-comparable-evidence gaps. The run ended `PARTIAL / BUDGET_EXHAUSTED:documents`. Workflow completion does not convert this failed retrieval/evaluation result into successful claim verification.
+
+| Measurement | Observed result |
+|---|---|
+| Manual source attached | No |
+| Search/document attempts | 2 / 6 |
+| Validated literal anchors | 2 |
+| Original download hashes checked | 5 |
+| Groq attempts | 5, including three HTTP 429 rate-limit errors |
+| Reported successful model usage | 7,477 input + 1,596 output tokens |
+| Budget-accounted tokens | 59,881, including conservative reservations; not all reported billed tokens |
+| Active duration | 77.42 seconds |
+| Configured estimated USD | $0.0577478, including $0.0319848 uncertain reservations |
+| Workflow checks | Idempotency, self-approval denial, review/export and manifest checks passed |
+| Expected approval quality | **Failed** |
+
+The second search-only run also failed the expected approval finding and ended partial at the document budget. Unlike the first run, it recorded no provider errors: **8,694 reported tokens, 17.575 seconds, three validated anchors and three download-hash checks**, with a **$0.025755 configured estimate and zero uncertain reservations**. Workflow review/export checks passed. Removing rate limits did not resolve the retrieval/evaluation quality failure.
+
+At this checkpoint the query refinements and final live rerun were still pending. The final measured outcome below supersedes that pending status while preserving both failed-quality runs.
+
+These are sanitized measurements, not a provider invoice or independent accuracy benchmark. Development researcher/editor identities were operated by AI QA. Raw execution reports and provider payloads remain private and are not submission artifacts. Publication, public accessibility and remote CI remain pending. Use the [demo script](demo-script.md) to show this limitation and any separately labelled manual/fixture fallback transparently.
+
+## Final search-only approval result — 9 October 2026
+
+Run `71dab61d-a01b-425c-9584-b4444fb5e3d6` started without a manual URL and ended **COMPLETED / SUPPORTED_BY_COLLECTED_EVIDENCE**, meeting the expected narrow approval finding. It recorded **2 searches, 2 document attempts, 4,763 reported tokens, 8.244 seconds and $0.0230872 configured estimated USD**, with no provider errors or uncertain reservations. Two literal anchors and two original-download hashes validated; workflow review/export checks passed through AI-operated local identities.
+
+The matching approval quotation was preserved from [a government-hosted PDF](https://cdn.s3waas.gov.in/s38757150decbd89b0f5442ca3db4d0e0e/uploads/2024/04/2024040945.pdf), with approval on 29 February and period `2024-02`. The QA runner inspected the preserved quotation and scoped fields. Government hosting is provenance, not authentication as the primary Cabinet release. A second source supplied contextual launch material; its dates are not promoted to verified facts. Approval does not establish installation delivery, household coverage or later operational results.
+
+The rebuilt running image exercised this final live case. A key-free packaged fixture journey passed earlier; a stronger fresh final packaged check and remote CI remain pending. Local final regression results are **149 backend, 14 PostgreSQL and 19 frontend**, with full Ruff across 61 files passing. Pinned Python runtime and production pnpm audits reported zero known vulnerabilities at scan time. The delivery-target follow-up below is inconclusive; an earlier-period live test remains pending.
+
+This selected successful case resolves its own expected finding, not the independent accuracy question. The two earlier failed-quality runs remain disclosed above. No independent human adjudication, generalized success rate, hosted readiness or guaranteed outcome is inferred.
+
+| Follow-up probe | Finding and measured outcome | Accuracy interpretation |
+|---|---|---|
+| Delivery target, run `a4a3b4ec-981a-4882-8c6e-4ca3343bb372` | Insufficient evidence; partial, two Groq 429 errors; 2 searches, 5 document attempts, 5 anchors, 43,203 reported/reserved tokens, 19.326 seconds, $0.0475342 configured estimate | No false-positive finding was observed, but provider failures and budget limits make negative-accuracy validation **inconclusive**. |

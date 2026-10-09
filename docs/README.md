@@ -7,10 +7,14 @@ Start with the [repository README](../README.md), [release readiness](release-re
 | Reference | Purpose |
 |---|---|
 | [API/development guide](api-guide.md) | Setup, configuration, API and troubleshooting |
+| [UI/UX audit](ui-ux-audit.md) | Friction fixes, design rationale and responsive/keyboard regression checks |
+| [Manual testing](manual-testing.md) | Judge walkthrough, real records, measured live test and provider accounting |
 | [Production runbook](runbooks/production.md) | Hosted deployment and operational gates |
 | [Backup/restore](runbooks/backup-restore.md) | Recovery, deletion replay and retention |
 | [Local operations](runbooks/local-operations.md) | Local environment and verification history |
 | [Submission readiness](submission-readiness.md) | Judging evidence, demo flow and disclosure |
+| [Submission checklist](submission-checklist.md) | Engineering handoff, participant recording and final entry |
+| [Demo script](demo-script.md) | 2:50 local screen-recording steps and transparent fallback |
 | [PRD](PRD.md) | Product requirements, users and flows |
 | [System specification](product-system-spec.md) | Architecture, contracts, data and failure states |
 | [Agent design](agent-design.md) | Extraction tools and deterministic safeguards |
@@ -21,4 +25,4 @@ Start with the [repository README](../README.md), [release readiness](release-re
 | [Editable diagrams](factledger.drawio) | diagrams.net architecture source |
 | [Historical design canvas](review-canvas.html) | Early review, not the running application |
 
-Naming is final; trademark/domain clearance and licensing remain owner decisions.
+Naming is final and the owner selected the [MIT License](../LICENSE). Trademark/domain clearance remains a separate owner decision. The authorized repository destination is [sankalp2515/FactLedger](https://github.com/sankalp2515/FactLedger); publication and CI status must be verified after pushing.

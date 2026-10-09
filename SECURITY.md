@@ -4,7 +4,7 @@ FactLedger is a first release. Hosted deployments must satisfy the [production r
 
 ## Report privately
 
-Do not put exploit details, credentials, personal data or private records in public issues. Once configured, use GitHub **Security → Report a vulnerability** if private reporting is enabled. Otherwise contact the owner through an established private channel and request a secure reporting route before sending details. No dedicated security email or response SLA has been established.
+Do not put exploit details, credentials, personal data or private records in public issues. Private vulnerability reporting is enabled for this repository: use [Security → Report a vulnerability](https://github.com/sankalp2515/FactLedger/security/advisories/new). No dedicated security email or response SLA has been established.
 
 Provide affected commit, impact, prerequisites and a minimal reproduction using synthetic records. Do not test another workspace or deployment without authorization.
 

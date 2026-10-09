@@ -1,6 +1,6 @@
 # Implemented release and verification record
 
-Verified locally on 8 October 2026. The final product name is **FactLedger**. This release audit supersedes test counts in this historical implementation record; see [release readiness](release-readiness.md). This record describes the running implementation; older planning documents describe intended targets and are not evidence that those targets passed.
+Implemented and verified locally; the final product name is **FactLedger**. The [release audit](release-readiness.md) supersedes the historical measurements below. At the latest supplied checkpoint, backend regressions numbered 149, PostgreSQL evaluations 14 and frontend tests 19; final release evidence is recorded in that audit. Older planning documents describe intended targets and are not evidence that those targets passed.
 
 ## Product delivered
 
@@ -65,4 +65,4 @@ The parser process is not a separately proven OS filesystem sandbox. Scanned PDF
 
 All five judging criteria are mapped in [submission readiness](submission-readiness.md). The engineering story is source-grounded research with an inspectable stage/quantity ledger and immutable human review, supported by durable recovery rather than a search-summary wrapper.
 
-Independent100-pair adjudication, customer pilot, final branding/license, participant eligibility/terms, public repository/demo publication and final contest submission remain external gates. The evaluation tools and protocol are implemented; absent human labels are not replaced with invented accuracy. Hosted OIDC/TLS/alerts/backups need the production runbook and a verified deployment before real newsroom use. Local implementation authorization does not authorize public release.
+The owner authorized repository release to [sankalp2515/FactLedger](https://github.com/sankalp2515/FactLedger) and selected the [MIT License](../LICENSE). Public accessibility and remote CI must be checked after pushing. Demo recording/upload, participant eligibility/details, agreement acceptance and final contest entry remain participant-owned. Independent 100-pair adjudication and a customer pilot remain unmet product-validation goals, not contest prerequisites. The evaluation protocol is implemented; absent human labels are not replaced with invented accuracy. Hosted OIDC/TLS/alerts/backups require a verified deployment before real newsroom use. See the [submission checklist](submission-checklist.md).

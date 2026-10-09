@@ -2,15 +2,15 @@
 
 > **Historical planning document:** the user subsequently authorized implementation. The shipped design uses PostgreSQL polling and private local artifacts instead of the original Redis/S3/LangGraph stack proposed below. Consult [implementation status](implementation-status.md) and [release readiness](release-readiness.md) for current behavior, checks and outstanding deployment gates. Original review-only instructions describe the earlier planning phase.
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. This document authorizes no implementation. The user explicitly requested design review before building.
+> **Planning history:** this plan was reviewed before implementation and the release has since been implemented and verified. Its task checkboxes and proposed commands are historical planning detail, not the current delivery checklist. Use [submission checklist](submission-checklist.md) for remaining release work.
 
-> **8 October proposed amendments:** Product name remains **FactLedger**; use `product_core` and `product_worker` instead of prior brand-derived package paths. [Engineering review](engineering-review.md) §§4–6 define the revised correctness/API/data contracts; §10 adds required acceptance evidence to Tasks 1–12 and moves generated contracts/minimal UI shell to the first source-to-anchor increment after frontend finalization. These explicit amendments supersede conflicting earlier plan details, including signed-link tests (test authenticated download revocation), cross-workspace status (indistinguishable 404), missing review submission/read commands, and progressive case-head mutation (use run-owned results and explicit integration). Include MetricObservation in the shared contracts, migration, ledger and UC-04–09 tests. The full release scope remains intact; every task remains unchecked. Reconcile task-level files/interfaces under these contracts during approved implementation planning; do not execute the original conflicting steps.
+> **8 October proposed amendments:** Product name remains **FactLedger**; use `product_core` and `product_worker` instead of prior brand-derived package paths. [Engineering review](engineering-review.md) §§4–6 define the revised correctness/API/data contracts; §10 adds required acceptance evidence to Tasks 1–12 and moves generated contracts/minimal UI shell to the first source-to-anchor increment after frontend finalization. These explicit amendments supersede conflicting earlier plan details, including signed-link tests (test authenticated download revocation), cross-workspace status (indistinguishable 404), missing review submission/read commands, and progressive case-head mutation (use run-owned results and explicit integration). Include MetricObservation in the shared contracts, migration, ledger and UC-04–09 tests. The historical task checkboxes below are not a current delivery status; implementation is recorded in implementation status and release readiness. Reconcile task-level files/interfaces under these contracts during approved implementation planning; do not execute the original conflicting steps.
 
 **Goal:** Deliver a durable evidence investigation workspace for newsroom researchers and editors.
 
 **Architecture:** Modular FastAPI backend and separate checkpointed Python worker, with React UI. PostgreSQL owns cases, evidence, run state and reviews; object storage owns document artifacts. SerpApi supplies search discovery and a model adapter supplies inspectable evidence judgments.
 
-**Tech Stack:** React/TypeScript, FastAPI/Pydantic, LangGraph, PostgreSQL, Redis job queue, S3-compatible storage, HTTPX, HTML extraction, pypdf + pdfplumber. Pin compatible versions when implementation starts; none installed for this design.
+**Implemented stack:** React/TypeScript, FastAPI/Pydantic, PostgreSQL durable polling, private artifact volume, HTTPX, HTML extraction, pypdf + pdfplumber. Redis, S3 and LangGraph below were early proposals and are not dependencies of the shipped local release.
 
 **Spec:** [PRD.md](PRD.md), [product-system-spec.md](product-system-spec.md), [agent-design.md](agent-design.md), [use-cases.md](use-cases.md). Read these and the research record before execution. PRD defines scope; technical spec defines contracts.
 
@@ -25,7 +25,7 @@
 - Every case mutation requires expected_revision. Review approvals and exports bind immutable revisions.
 - No numerical truth confidence; automated findings and human conclusions are separate.
 - No API credentials in browser, logged queries, stored search payloads or exports.
-- All product tasks remain unchecked until explicitly authorized after design review.
+- Checkboxes below retain planning history; current delivery evidence is recorded in implementation status and release readiness.
 
 ## Review focus
 
@@ -37,13 +37,13 @@
 
 ## Proposed file map
 
-`apps/api/civreniq/` contains `cases/`, `runs/`, `search/`, `acquisition/`, `evidence/`, `review/`, `reports/`, and `platform/`. Each module contains typed contracts, domain service and adapter/routes only as needed. `apps/worker/civreniq_worker/` contains graph/lease/job dispatch and imports the shared backend package. `apps/web/src/features/` contains `cases/`, `investigation/`, `evidence/`, and `review/`; API client/generated contracts live in `apps/web/src/api/`. Tests mirror these boundaries under `tests/`; `eval/` contains datasets and scoring. Deployment files live in `infra/`; operator documentation in `docs/runbooks/`.
+`apps/api/product_core/` contains `cases/`, `runs/`, `search/`, `acquisition/`, `evidence/`, `review/`, `reports/`, and `platform/`. Each module contains typed contracts, domain service and adapter/routes only as needed. `apps/worker/product_worker/` contains graph/lease/job dispatch and imports the shared backend package. `apps/web/src/features/` contains `cases/`, `investigation/`, `evidence/`, and `review/`; API client/generated contracts live in `apps/web/src/api/`. Tests mirror these boundaries under `tests/`; `eval/` contains datasets and scoring. Deployment files live in `infra/`; operator documentation in `docs/runbooks/`.
 
-Shared contracts in `apps/api/civreniq/contracts.py`: ClaimScope, ClaimVersion, SearchRequest, SearchBatch, SourceRef, SourceVersion, Evidence, EvidenceSet, RunBudget, RunEvent, CaseRevision, ReviewDecision, ExportPack, ProjectRef, StageObservation, FundingObservation, DerivedQuantity. Values/enum semantics are copied from spec sections 6–10. UUIDs and workspace_id occur on tenant-bound records. Do not generate disconnected copies of these types in worker code.
+Shared contracts in `apps/api/product_core/contracts.py`: ClaimScope, ClaimVersion, SearchRequest, SearchBatch, SourceRef, SourceVersion, Evidence, EvidenceSet, RunBudget, RunEvent, CaseRevision, ReviewDecision, ExportPack, ProjectRef, StageObservation, FundingObservation, DerivedQuantity. Values/enum semantics are copied from spec sections 6–10. UUIDs and workspace_id occur on tenant-bound records. Do not generate disconnected copies of these types in worker code.
 
 ## Task 1 — Durable cases and workspace identity
 
-**Files:** `apps/api/civreniq/contracts.py`, `cases/{models,service,routes}.py`, `platform/{auth,db,settings}.py`, `migrations/0001_cases.py`, `tests/cases/test_cases.py`, `tests/platform/test_auth.py`.
+**Files:** `apps/api/product_core/contracts.py`, `cases/{models,service,routes}.py`, `platform/{auth,db,settings}.py`, `migrations/0001_cases.py`, `tests/cases/test_cases.py`, `tests/platform/test_auth.py`.
 
 **Consumes:** spec data model and ClaimScope. **Produces:** `CaseService.create(workspace_id, actor_id, title, original_claim) -> CaseRevision`; `CaseService.set_scope(case_id, expected_revision, claims: list[ClaimScope], actor_id) -> CaseRevision`; verified `ActorContext` used by routes.
 
@@ -66,7 +66,7 @@ Shared contracts in `apps/api/civreniq/contracts.py`: ClaimScope, ClaimVersion, 
 
 ## Task 3 — Runs, outbox, budgets and events
 
-**Files:** `runs/{models,service,budget,events,routes}.py`, `platform/outbox.py`, `migrations/0003_runs.py`, `apps/worker/civreniq_worker/jobs.py`, `tests/runs/test_runs.py`.
+**Files:** `runs/{models,service,budget,events,routes}.py`, `platform/outbox.py`, `migrations/0003_runs.py`, `apps/worker/product_worker/jobs.py`, `tests/runs/test_runs.py`.
 
 **Produces:** `RunService.start(case_id, expected_revision, claim_ids, budget: RunBudget, idempotency_key, actor_id) -> InvestigationRun`; `BudgetService.reserve(run_id, estimate: UsageEstimate) -> Reservation`; `EventStore.append(run_id, type, payload) -> RunEvent` and `replay(run_id, after_seq) -> list[RunEvent]`.
 
@@ -113,7 +113,7 @@ Manual notes and attachments also use source ownership/access checks. Record att
 
 ### Task 6 domain extension — stage/funding ledger (required, same test cycle)
 
-**Files:** apps/api/civreniq/evidence/{ledger,quantities}.py; tests/evidence/test_delivery_ledger.py; tests/evidence/test_quantities.py; migrations/0004_delivery_ledger.py.
+**Files:** apps/api/product_core/evidence/{ledger,quantities}.py; tests/evidence/test_delivery_ledger.py; tests/evidence/test_quantities.py; migrations/0004_delivery_ledger.py.
 
 **Consumes:** validated EvidenceSet, ProjectRef and ClaimVersion. **Produces:** LedgerService.derive(claim: ClaimVersion, project: ProjectRef, evidence: EvidenceSet) -> DeliveryLedger; QuantityNormalizer.normalize(expression: str, currency: str, period: str) -> NormalizedQuantity; LedgerService.override(observation_id, expected_revision, corrected_fields, reason, actor_id) -> CaseRevision. DeliveryLedger is the aggregate of StageObservation[], FundingObservation[], DerivedQuantity[] and Gap[] defined in shared contracts. API GET /cases/{id}/ledger and POST /cases/{id}/ledger-overrides use these services and tenant/revision checks.
 
@@ -135,7 +135,7 @@ Manual notes and attachments also use source ownership/access checks. Record att
 
 ## Task 8 — Checkpointed adaptive investigation
 
-**Files:** `apps/worker/civreniq_worker/{graph,executor,leases}.py`, `runs/checkpoints.py`, `tests/worker/test_graph.py`.
+**Files:** `apps/worker/product_worker/{graph,executor,leases}.py`, `runs/checkpoints.py`, `tests/worker/test_graph.py`.
 
 **Produces:** `RunExecutor.execute(run_id: UUID) -> RunOutcome`; `RunExecutor.resume(run_id: UUID) -> RunOutcome`. Consumes search/acquisition/evidence interfaces without UI or provider-specific graph logic.
 
