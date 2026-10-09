@@ -10,14 +10,15 @@ Use this handoff with the [release audit](release-readiness.md), [judge walkthro
 - [x] Add owner-selected MIT licensing, copyright 2026 Sankalp.
 - [x] Disclose AI assistance, synthetic checks, local development reviewer identities and evaluation limits.
 - [x] Run final local regression checks: 149 backend, 14 real PostgreSQL and 19 frontend tests; Ruff across 61 files passed. The rebuilt running image completed the final live approval case; an earlier packaged key-free fixture journey passed.
-- [ ] Complete the stronger fresh final packaged acceptance check and inspect remote CI after publication.
-- [x] Reproduce a bounded search-only live case: the final approval test completed with support, two anchors, no provider errors and $0.0230872 configured estimate. Preserve disclosure of the two earlier failed-quality runs.
-- [ ] Recheck public files/history for credentials and private data; verify document links and inspect the final diff.
-- [ ] Push the authorized release to [sankalp2515/FactLedger](https://github.com/sankalp2515/FactLedger), verify public accessibility and inspect remote CI.
+- [x] Complete fresh packaged acceptance: remote clean Compose fixture passed; the latest local fixture also passed worker completion, quotation anchoring, review/export and deletion checks.
+- [ ] Confirm the full remote CI rerun passes after the environment-independent test correction.
+- [x] Reproduce a bounded search-only live case: the final approval test completed with support against a secondary article, two anchors, no provider errors and $0.0230872 configured estimate; primary-record discovery remains unresolved. Preserve disclosure of the two earlier failed-quality runs.
+- [x] Recheck public files/history for credentials and private data; verify document links and inspect the final diff.
+- [x] Push the authorized release to [sankalp2515/FactLedger](https://github.com/sankalp2515/FactLedger) and verify public accessibility (`main`, initial release `cfef80c`). Full remote CI is tracked separately above.
 
 The badges link to the actual workflow; they do not certify a pending run. Screenshots contain labelled synthetic demonstrations or public-record cases. Hosted production remains gated by the [production runbook](runbooks/production.md).
 
-Final supplied local checks: **149 backend tests, 14 PostgreSQL evaluations, 19 frontend tests**, plus Ruff across 61 files. Pinned Python runtime and production pnpm dependency audits reported zero known vulnerabilities at scan time. The [2:50 demo script](demo-script.md) and [judge scorecard](submission-readiness.md#judge-scorecard) reflect the final successful narrow approval result and preserve the earlier failures. Remote CI, stronger final packaged acceptance and earlier-period accuracy checks remain pending. The delivery-target follow-up is inconclusive because of provider errors and budget limits.
+Final supplied local checks: **149 backend tests, 14 PostgreSQL evaluations, 19 frontend tests**, plus Ruff across 61 files. Pinned Python runtime and production pnpm dependency audits reported zero known vulnerabilities at scan time. The [2:50 demo script](demo-script.md) and [judge scorecard](submission-readiness.md#judge-scorecard) reflect the successful narrow approval result and preserve earlier failures. Public release and fresh packaged acceptance passed. The full remote CI rerun remains pending. Both delivery-target and earlier-period negative-accuracy checks are inconclusive because of provider failures and incomplete evidence.
 
 ## Participant recording, entry and agreement
 

@@ -60,5 +60,3 @@ Desktop evidence at 1440x900 measured a 1217px client/scroll width, a 516px pane
 ![Desktop evidence workbench](demo/ui-workbench-desktop.png)
 
 [Mobile evidence workbench screenshot](demo/ui-workbench-mobile.png)
-
-

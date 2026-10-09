@@ -1,12 +1,12 @@
 # FactLedger release readiness
 
-Updated: 9 October 2026. The original audit and measured checkpoints are retained below. The final supplied local checks passed: **149 backend regressions, 14 PostgreSQL evaluations, 19 frontend tests and Ruff across 61 files**. Runtime dependency audits reported zero known vulnerabilities at scan time. The final search-only approval case met its expected finding; see the latest report below. These are engineering checks, not independent human assessment or hosted-production evidence. Publication and remote CI remain pending.
+Updated: 9 October 2026. The original audit and measured checkpoints are retained below. The final supplied local checks passed: **149 backend regressions, 14 PostgreSQL evaluations, 19 frontend tests and Ruff across 61 files**. Runtime dependency audits reported zero known vulnerabilities at scan time. The final search-only approval case met its expected finding; see the latest report below. These are engineering checks, not independent human assessment or hosted-production evidence. Publication is public and verified; the full remote CI rerun remains pending.
 
 ## Release decision
 
 | Target | Decision | Conditions |
 |---|---|---|
-| GitHub repository | Release authorized; publication verification pending | Destination [sankalp2515/FactLedger](https://github.com/sankalp2515/FactLedger), owner-selected [MIT License](../LICENSE); verify public access and remote CI after pushing. |
+| GitHub repository | Published; public access verified | [sankalp2515/FactLedger](https://github.com/sankalp2515/FactLedger), MIT, `main`; fresh remote Compose/frontend passed. Full CI rerun pending after a test-environment correction. |
 | Hackathon submission | Worth submitting after final packaging | Publish accessible code, record an actual local workflow under three minutes, verify the video link privately and complete the official entry/disclosure. |
 | Public hosted production | **No-go today** | Hosted identity/TLS, restricted-role deployment, operational alerts, durable deletion-ledger replication, restore objectives and load testing need deployment evidence. |
 
@@ -116,18 +116,25 @@ The second search-only run also failed the expected approval finding and ended p
 
 At this checkpoint the query refinements and final live rerun were still pending. The final measured outcome below supersedes that pending status while preserving both failed-quality runs.
 
-These are sanitized measurements, not a provider invoice or independent accuracy benchmark. Development researcher/editor identities were operated by AI QA. Raw execution reports and provider payloads remain private and are not submission artifacts. Publication, public accessibility and remote CI remain pending. Use the [demo script](demo-script.md) to show this limitation and any separately labelled manual/fixture fallback transparently.
+These are sanitized measurements, not a provider invoice or independent accuracy benchmark. Development researcher/editor identities were operated by AI QA. Raw execution reports and provider payloads remain private and are not submission artifacts. Publication and public accessibility are verified; the full remote CI rerun remains pending. Use the [demo script](demo-script.md) to show this limitation and any separately labelled manual/fixture fallback transparently.
 
 ## Final search-only approval result — 9 October 2026
 
 Run `71dab61d-a01b-425c-9584-b4444fb5e3d6` started without a manual URL and ended **COMPLETED / SUPPORTED_BY_COLLECTED_EVIDENCE**, meeting the expected narrow approval finding. It recorded **2 searches, 2 document attempts, 4,763 reported tokens, 8.244 seconds and $0.0230872 configured estimated USD**, with no provider errors or uncertain reservations. Two literal anchors and two original-download hashes validated; workflow review/export checks passed through AI-operated local identities.
 
-The matching approval quotation was preserved from [a government-hosted PDF](https://cdn.s3waas.gov.in/s38757150decbd89b0f5442ca3db4d0e0e/uploads/2024/04/2024040945.pdf), with approval on 29 February and period `2024-02`. The QA runner inspected the preserved quotation and scoped fields. Government hosting is provenance, not authentication as the primary Cabinet release. A second source supplied contextual launch material; its dates are not promoted to verified facts. Approval does not establish installation delivery, household coverage or later operational results.
+**Source attribution correction:** both accepted anchors, including the approval statement scoped to `2024-02`, map to the secondary article `https://pmsvy-cloud.in/pm-surya-ghar-muft-bijli-yojana-2024/`. The acquired government-hosted PDF contained unrelated Sikkim election-expense material and supplied zero accepted candidates. The earlier attribution of the approval quotation to that PDF was incorrect and has been corrected throughout the release documentation. Host-ranking signals do not authenticate source relevance or authority. Primary-record discovery remains unresolved; an editor should separately inspect the official PIB release through the visibly manual-source workflow. Contextual launch dates in the secondary article are not promoted to verified facts. Approval does not establish installation delivery, household coverage or later operational results.
 
-The rebuilt running image exercised this final live case. A key-free packaged fixture journey passed earlier; a stronger fresh final packaged check and remote CI remain pending. Local final regression results are **149 backend, 14 PostgreSQL and 19 frontend**, with full Ruff across 61 files passing. Pinned Python runtime and production pnpm audits reported zero known vulnerabilities at scan time. The delivery-target follow-up below is inconclusive; an earlier-period live test remains pending.
+The rebuilt running image exercised this final live case. Both the latest local key-free fixture and a fresh remote Compose fixture passed; the full remote CI rerun remains pending. Local final regression results are **149 backend, 14 PostgreSQL and 19 frontend**, with full Ruff across 61 files passing. Pinned Python runtime and production pnpm audits reported zero known vulnerabilities at scan time. Both delivery-target and earlier-period follow-ups below are inconclusive for negative accuracy.
 
-This selected successful case resolves its own expected finding, not the independent accuracy question. The two earlier failed-quality runs remain disclosed above. No independent human adjudication, generalized success rate, hosted readiness or guaranteed outcome is inferred.
+This selected case meets the expected finding against a collected secondary article, not an authenticated primary record or independent truth assessment. Its primary-source quality gap and the two earlier failed-quality runs remain disclosed. No independent human adjudication, generalized success rate, hosted readiness or guaranteed outcome is inferred.
 
 | Follow-up probe | Finding and measured outcome | Accuracy interpretation |
 |---|---|---|
 | Delivery target, run `a4a3b4ec-981a-4882-8c6e-4ca3343bb372` | Insufficient evidence; partial, two Groq 429 errors; 2 searches, 5 document attempts, 5 anchors, 43,203 reported/reserved tokens, 19.326 seconds, $0.0475342 configured estimate | No false-positive finding was observed, but provider failures and budget limits make negative-accuracy validation **inconclusive**. |
+| Earlier period, run `c4de5e18-ddb5-404c-a183-217cbd59cd14` | Insufficient evidence; `PARTIAL / PROVIDER_ACTIONS_INCOMPLETE`, one search network error; 2 search attempts, 0 documents, 0 anchors, 0 tokens, 63.51 seconds, $0.02 configured estimate | No false-positive finding was observed, but no document evidence was collected. Negative-accuracy validation is **inconclusive**. |
+
+## Publication and remote verification
+
+The release was pushed to public `main` at `cfef80c`; public access was independently checked through the web reader. Public-file/history credential/private-data scans, document links and final diff checks passed. The [first remote CI run](https://github.com/sankalp2515/FactLedger/actions/runs/37931620057) passed frontend verification and a clean fresh Compose fixture journey. Its backend job exposed one budget test that depended on a locally configured provider key. Test setup now blanks provider keys and that specific test supplies a fake key; all 149 backend tests passed locally again. This corrects test isolation without changing application behavior. The next full remote CI run remains pending.
+
+The latest local packaged fixture also completed with a literal anchor, role-separated review/export and deletion denial after the final query changes. Both fresh packaged paths are verified; overall remote CI is not claimed passing until its corrected backend job succeeds.

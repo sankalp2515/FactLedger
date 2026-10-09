@@ -181,7 +181,11 @@ def test_uploaded_pdf_has_immutable_source_reader_and_authenticated_download():
 
 def test_daily_workspace_admission_includes_requested_budget(monkeypatch):
     from product_core.config import get_settings
+    from product_core.main import settings
+    from pydantic import SecretStr
 
+    # Reach admission with a nonfunctional credential; the rejected run cannot dispatch.
+    monkeypatch.setattr(settings, "serpapi_api_key", SecretStr("test-only"))
     monkeypatch.setattr(get_settings(), "workspace_daily_usd", 0.1)
     with TestClient(app) as client:
         login(client)
