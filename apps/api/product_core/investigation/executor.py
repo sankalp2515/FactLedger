@@ -546,7 +546,7 @@ def execute_run(run_id: str, workspace_id: str | None = None) -> None:
         if snapshot["mode"] == "live":
             provider = snapshot["plan"].get("pricing", {}).get("llm_provider", settings.llm_provider)
             model_name = snapshot["plan"].get("pricing", {}).get("llm_model", settings.llm_model)
-            key = settings.groq_api_key if provider == "groq" else settings.nvidia_api_key
+            key = settings.model_api_key(provider)
             if not settings.serpapi_api_key.get_secret_value() or not key.get_secret_value():
                 raise ValueError("LIVE_PROVIDERS_NOT_CONFIGURED")
             search = SerpApiSearch(settings.serpapi_api_key.get_secret_value())

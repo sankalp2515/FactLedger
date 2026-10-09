@@ -5,6 +5,7 @@
 !.env.example
 .data
 .execution
+docs
 artifacts
 **/node_modules
 **/dist

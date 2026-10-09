@@ -206,6 +206,9 @@ def session(request: Request):
             "serpapi": bool(settings.serpapi_api_key.get_secret_value()),
             "groq": bool(settings.groq_api_key.get_secret_value()),
             "nvidia": bool(settings.nvidia_api_key.get_secret_value()),
+            "openai": bool(settings.openai_api_key.get_secret_value()),
+            "anthropic": bool(settings.anthropic_api_key.get_secret_value()),
+            "gemini": bool(settings.gemini_api_key.get_secret_value()),
         },
     }
 

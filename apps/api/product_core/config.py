@@ -14,8 +14,11 @@ class Settings(BaseSettings):
     serpapi_api_key: SecretStr = SecretStr("")
     groq_api_key: SecretStr = SecretStr("")
     nvidia_api_key: SecretStr = SecretStr("")
+    openai_api_key: SecretStr = SecretStr("")
+    anthropic_api_key: SecretStr = SecretStr("")
+    gemini_api_key: SecretStr = SecretStr("")
     llm_provider: str = "groq"
-    llm_model: str = "openai/gpt-oss-120b"
+    llm_model: str = ""
     serpapi_search_usd: float = 0.01
     llm_input_usd_per_million: float = 0.6
     llm_output_usd_per_million: float = 0.8
@@ -35,8 +38,17 @@ class Settings(BaseSettings):
     def validate_deployment(self):
         if self.mode not in {"development", "production"}:
             raise ValueError("MODE must be development or production")
-        if self.llm_provider not in {"groq", "nvidia"}:
+        defaults = {
+            "groq": "openai/gpt-oss-120b",
+            "nvidia": "meta/llama-3.3-70b-instruct",
+            "openai": "gpt-4.1-mini",
+            "anthropic": "claude-sonnet-4-6",
+            "gemini": "gemini-2.5-flash",
+        }
+        if self.llm_provider not in defaults:
             raise ValueError("Unsupported LLM provider")
+        if not self.llm_model.strip():
+            self.llm_model = defaults[self.llm_provider]
         if min(self.serpapi_search_usd, self.llm_input_usd_per_million, self.llm_output_usd_per_million) < 0:
             raise ValueError("Provider accounting rates must be nonnegative")
         if self.mode == "production":
@@ -53,6 +65,12 @@ class Settings(BaseSettings):
             if not self.database_url.startswith("postgresql"):
                 raise ValueError("Production requires PostgreSQL")
         return self
+
+    def model_api_key(self, provider: str) -> SecretStr:
+        """Select exactly the pinned provider; never silently switch paid accounts."""
+        if provider not in {"groq", "nvidia", "openai", "anthropic", "gemini"}:
+            raise ValueError("Unsupported LLM provider")
+        return getattr(self, provider + "_api_key")
 
 
 @lru_cache

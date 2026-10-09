@@ -4,7 +4,7 @@
 
 - Scoped claims and versioned investigation cases.
 - SerpApi discovery, preserved HTML/PDF sources and literal quotation anchors.
-- Groq/NVIDIA extraction adapters with deterministic guards.
+- Groq, NVIDIA, OpenAI, Anthropic and Gemini extraction adapters with deterministic guards and provider-specific usage accounting.
 - Delivery, funding and metric comparisons, gaps and source-family hypotheses.
 - Durable jobs, budgets, fenced leases, pause/cancel/resume and acknowledgment recovery.
 - Workspace roles, separate editorial review and immutable JSON/Markdown packs.
@@ -16,4 +16,4 @@
 - Bounded extraction retains relevant regions of long records and discloses omitted material.
 - One-command, key-free Docker fixture startup, clean-stack CI, publication checks and MIT licensing.
 
-Hosted production, independent evaluation, customer pilot and public submission remain separate gates. See [release readiness](docs/release-readiness.md).
+See [hosting and recovery](docs/architecture.md#hosting-and-recovery) for deployment requirements and [user flows](docs/user-flows.md) for usage.

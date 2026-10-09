@@ -1,6 +1,6 @@
 # Security policy
 
-FactLedger is a first release. Hosted deployments must satisfy the [production runbook](docs/runbooks/production.md). Development identity switching must never be exposed as production authentication.
+FactLedger is a first release. Hosted deployments must satisfy the [hosting prerequisites](docs/architecture.md#hosting-and-recovery). Development identity switching must never be exposed as production authentication.
 
 ## Report privately
 

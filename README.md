@@ -11,44 +11,28 @@ A newsroom investigation workspace for public spending and project delivery clai
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 [![MIT license](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[Get started](#get-started) · [Architecture](docs/product-system-spec.md) · [API](docs/api-guide.md) · [Release readiness](docs/release-readiness.md) · [Contributing](CONTRIBUTING.md)
+[Get started](#get-started) · [User flows](docs/user-flows.md) · [Architecture](docs/architecture.md) · [API guide](docs/api-guide.md) · [Design](docs/design.md)
 
 </div>
 
-An announcement can become a headline about completion. An inauguration can become a claim that a hospital is operational. FactLedger helps researchers and editors inspect exactly what collected records establish, with a traceable path from search query to preserved source, literal quotation, scoped finding, editorial decision and frozen evidence pack.
+An announcement can become a headline about completion. An inauguration can become a claim that a hospital is operational. FactLedger helps researchers and editors inspect what collected records establish, with a traceable path from search query to preserved source, literal quotation, scoped finding, editorial decision and frozen evidence pack.
 
-![FactLedger evidence workbench: live public-record walkthrough](docs/demo/ui-workbench-desktop.png)
+![FactLedger evidence workbench](docs/assets/ui-workbench-desktop.png)
 
-*Screenshot from an earlier live walkthrough with the PIB record attached manually.*
-
-> **Release status:** locally verified first release: 149 backend tests, 14 PostgreSQL evaluations and 19 frontend tests passed. A search-only live approval case completed with validated quotations. Hosted production requires the gates in the [production runbook](docs/runbooks/production.md). Synthetic demonstrations are labelled; automated findings describe collected evidence and do not certify conditions on the ground.
-
-[Desktop workbench](docs/demo/ui-workbench-desktop.png) · [Mobile workbench](docs/demo/ui-workbench-mobile.png) · [Live provider accounting](docs/demo/live-provider-costs.png) · [Submission checklist](docs/submission-checklist.md)
-
-The CI badge reports the repository workflow state; it is not a local test result. Static language and license badges identify the stack and license.
+*Interface from a live public-record walkthrough with a manually attached PIB source.*
 
 ## Why FactLedger
 
-- **Check the actual claim.** Confirm subject, geography, period, delivery stage and quantity before investigating. Keep announcement, approval, funding, completion and operation distinct.
-- **Search with a purpose.** SerpApi provides live Search, News and selected Scholar discovery. Inspect queries, provenance, opposing searches and budgets; search snippets never count as evidence.
-- **Keep an inspectable trail.** Preserve fetched HTML/PDF records, hashes and text. Accepted quotations have literal text anchors and explicit comparison gaps.
-- **Make uncertainty useful.** Expose missing records, partial capture and possible source dependence. Language models propose candidates; deterministic guards and editorial review constrain their use.
-- **Hand work to an editor.** Review an immutable case revision, return it for changes or approve a qualified conclusion. Self approval is denied. Later edits do not rewrite an approved pack.
-- **Recover durable work.** PostgreSQL jobs use leases, heartbeat, generation fencing and durable provider acknowledgments. Pause, cancel and resume without silently replaying acknowledged searches.
-
-## A typical investigation
-
-1. Create a case and confirm its scope.
-2. Inspect the search plan and choose a labelled fixture or live investigation.
-3. Use **Evidence** for paginated comparisons and **Sources** for captured originals. Open a record for its full quote and **Jump to quotation**. On mobile, navigate with **Case view**.
-4. Add human notes, correct evidence or source-family assumptions and revise the conclusion.
-5. Submit the frozen revision to a separate editor, then download a JSON or Markdown pack.
-
-For example, “Hospital A is operational” remains unsupported when a collected document establishes only inauguration. FactLedger exposes the missing operational evidence instead of promoting a related quotation into a stronger conclusion.
+- **Check the actual claim.** Confirm subject, geography, period, delivery stage and quantity. Keep approval, funding, completion and operation distinct.
+- **Search with a purpose.** SerpApi supplies live Search, News and selected Scholar discovery. Inspect primary-record and opposing queries, provenance and budgets; snippets never count as evidence.
+- **Keep an inspectable trail.** Preserve originals, hashes and extracted text. Accepted quotations have literal anchors and explicit comparison gaps.
+- **Make uncertainty useful.** Expose missing records, partial capture and possible source dependence. Models propose candidates; deterministic guards constrain their use.
+- **Hand work to an editor.** Submit a frozen revision to a separate editor. Self approval is denied; later edits do not rewrite an approved pack.
+- **Recover durable work.** PostgreSQL jobs use leases, heartbeat, generation fencing and durable provider acknowledgments.
 
 ## Get started
 
-Requires Docker Desktop with Linux containers and Docker Compose 2.24 or newer. Clone the repository, then start the entire application with one Compose command:
+Requires Docker Desktop with Linux containers and Docker Compose 2.24 or newer.
 
 ```sh
 git clone https://github.com/sankalp2515/FactLedger.git
@@ -56,122 +40,107 @@ cd FactLedger
 docker compose up --build -d
 ```
 
-Compose builds the frontend, starts PostgreSQL, runs migrations, then starts the API and durable worker. No separate service commands or local Python/Node installation are needed to run it. Wait for the API to be healthy in Docker Desktop, then open [localhost:8008](http://127.0.0.1:8008). Fixture mode works without a `.env` file.
+One Compose command builds the frontend, starts PostgreSQL, applies migrations and starts the API and worker. Wait for the API to be healthy in Docker Desktop, then open [localhost:8008](http://127.0.0.1:8008). No local Python or Node installation is needed. **Synthetic fixture mode works without API keys or a `.env` file.**
 
-For live research, copy [.env.example](.env.example) to `.env` once, configure a private `SESSION_SECRET` and the provider keys below, and use the same startup command. Existing `.env` files are retained. `APP_PORT` overrides the port. API and database bind loopback. Development identities let you exercise researcher/editor workflows; production requires OIDC. Never use `docker compose down -v` when retaining cases.
+For live research, copy [.env.example](.env.example) to `.env` once, set a private `SESSION_SECRET`, `SERPAPI_API_KEY`, and one selected LLM provider's key. Set `LLM_PROVIDER` explicitly and leave `LLM_MODEL` blank for its default. Reapply the same startup command after configuration changes. Preserve an existing `.env` and never commit it.
 
-| Setting | Purpose |
+| Provider | LLM_PROVIDER | Required LLM key | Default model |
+|---|---|---|---|
+| Groq | `groq` | `GROQ_API_KEY` | `openai/gpt-oss-120b` |
+| NVIDIA | `nvidia` | `NVIDIA_API_KEY` | `meta/llama-3.3-70b-instruct` |
+| OpenAI | `openai` | `OPENAI_API_KEY` | `gpt-4.1-mini` |
+| Anthropic | `anthropic` | `ANTHROPIC_API_KEY` | `claude-sonnet-4-6` |
+| Gemini | `gemini` | `GEMINI_API_KEY` | `gemini-2.5-flash` |
+
+Only the selected LLM key is needed alongside SerpApi. These are direct provider APIs; account access, model compatibility and quotas still apply. Keys stay server-side. Configure cost rates for the selected model/account; example rates are estimates, not universal prices. See [configuration and provider protocols](docs/api-guide.md#environment-and-setup).
+
+`APP_PORT` overrides port 8008. API/database bind loopback. Local identities exercise researcher/editor roles; public hosting requires OIDC and the [hosting prerequisites](docs/architecture.md#hosting-and-recovery). Never delete persistent volumes when retaining cases.
+
+## When to use it
+
+| Use case | Question |
 |---|---|
-| `SERPAPI_API_KEY` | Live search discovery |
-| `GROQ_API_KEY` | Groq candidate extraction when selected |
-| `NVIDIA_API_KEY` | NVIDIA extraction when selected |
-| `LLM_PROVIDER`, `LLM_MODEL` | Extraction provider and model |
-| `SESSION_SECRET` | Private signing secret |
-| `LOCAL_DB_PASSWORD` | Local Compose database password |
+| Government schemes | Was a scheme approved, or were benefits delivered? |
+| Infrastructure | Was a hospital inaugurated, or operational in the claimed period? |
+| Public spending | Was money allocated, released or spent? |
+| Employment programmes | Does the record count people trained, placed or employed? |
+| Editorial review | Can another editor inspect originals, quotations and unresolved gaps? |
 
-Fixture mode needs no paid provider calls. Live mode needs SerpApi plus the selected LLM provider. Keys stay server-side; never commit `.env`. See [.env.example](.env.example) and the [configuration guide](docs/api-guide.md) for authoritative settings.
+### Try an investigation
 
-## Try it as a judge
+Use the claim **“The Union Cabinet approved PM-Surya Ghar: Muft Bijli Yojana in February 2024.”** Confirm subject `PM-Surya Ghar: Muft Bijli Yojana`, geography `India`, period `2024-02`, stage `APPROVED`; leave quantities blank.
 
-Use FactLedger when a public claim needs a defensible evidence trail, especially when an announcement or funding figure is being confused with delivered results.
+1. Create the case and confirm scope.
+2. Generate and inspect the research plan. Select **Live search and original records** and bounded limits: 2 searches, 6 documents, 1 round, 60,000 tokens, 180 seconds and $0.25 configured estimate. Adjust the estimate for your provider rates if needed.
+3. Begin without attached sources. Open **Inspect run** to see SerpApi queries, acquisition, failures and costs. Integrate terminal results.
+4. Inspect each original and literal quotation. Use **Jump to quotation** and read comparison gaps. If the primary record is missing, acquire the [PIB release](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2010130&lang=2&reg=48) through **Add source**; its manual provenance remains visible.
+5. Write a qualified conclusion, select inspected citations and submit for review. Switch to Editor, inspect the frozen revision and decide. Export JSON or Markdown.
 
-| Use case | Question to investigate |
-|---|---|
-| Government schemes | Was the scheme approved, or were benefits actually delivered? |
-| Infrastructure | Was a hospital inaugurated, or is it operational in the claimed period? |
-| Public spending | Is the cited amount allocated, released or spent? |
-| Employment programmes | Does a record count people trained, placed or employed? |
-| Editorial review | Can another editor inspect the original record, exact quotation and unresolved gaps? |
+Approval does not establish later installations. Search availability and provider limits can leave a partial or insufficient finding; a secondary quotation does not replace primary confirmation. An editor remains accountable for the conclusion.
 
-**A simple real case:** “The Union Cabinet approved PM-Surya Ghar: Muft Bijli Yojana in February 2024.” The [official PIB release](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2010130&lang=2&reg=48) is a primary record for approval. It does not establish how many households later received installations.
-
-1. Create a case with that claim. Confirm subject `PM-Surya Ghar: Muft Bijli Yojana`, geography `India`, period `2024-02`, stage `APPROVED`; leave quantity fields empty.
-2. Review the plan, select **Live search and original records**, and set limits: 2 searches, 6 documents, 1 round, 60,000 tokens, 180 seconds, $0.25 estimated USD. Start with no attached sources so the demo exposes SerpApi discovery itself.
-3. Start the investigation. Open its activity to inspect SerpApi queries, source acquisition, provider attempts, tokens and estimates. Integrate the finished or partial run into the draft.
-4. Inspect quotations against preserved text and compare the asserted delivery stage. Retain unresolved gaps; a bounded search is not exhaustive verification.
-5. Submit a qualified conclusion with citations. Switch to the local **Editor** identity in **Workspace**, inspect the frozen revision, and approve or return it. The submitting researcher cannot approve their own review.
-6. Download the JSON evidence pack. Check scope, evidence anchors, gaps, review decisions, hashes and per-run cost estimates.
-
-**Optional manual-source mode:** use **Add source → Source URL → Public source URL → Acquire source** when you already have a record to inspect. Manually attached originals retain their provenance and are separate from search-discovered sources. The earlier measured walkthrough used this mode; it is not proof that a search-only run discovered the official release. See the release audit for actual live measurements.
-
-The final measured search-only approval case **completed with SUPPORTED_BY_COLLECTED_EVIDENCE**: two searches, two document attempts, two validated literal anchors, 4,763 reported tokens, 8.244 seconds and a $0.0230872 configured estimate with zero uncertain reservations or provider errors. Both accepted quotations came from a secondary `pmsvy-cloud.in` article. The acquired government-hosted PDF was unrelated election-expense material and supplied no accepted evidence. Primary-record discovery remains a gap: an editor should separately inspect the official PIB record through the transparent optional manual-source flow. Two earlier runs failed the expected finding and remain documented in the [release audit](docs/release-readiness.md). This selected positive finding describes collected records; it is not independent confirmation of truth or an accuracy benchmark. Follow the [recording script](docs/demo-script.md) for the actual result and a labelled fallback.
-
-Follow the [complete manual testing guide](docs/manual-testing.md) for exact screens, expected results, failure scenarios and the measured live test. If keys are unavailable, use the separately labelled synthetic hospital case in that guide; it makes no provider calls. Facts and provider availability may change, so successful workflow execution does not guarantee a particular automated finding.
+For a **key-free example**, create the fictional claim **“Hospital A is operational in District A during September 2026.”** Confirm `Hospital A`, `District A`, `2026-09`, `OPERATIONAL`, then select **Synthetic fixture · evaluation only**. Inspect the inauguration/operation mismatch, review and export. See [complete user flows](docs/user-flows.md).
 
 ## Logs and provider costs
 
-The API and worker emit structured JSON operational logs with request/run identifiers, status, duration and safe error types. Claims, document text, model prompts, credentials and URL query strings are excluded from those logs. Docker rotates each service's logs at 10 MB, retaining three files. View them with `docker compose logs -f --tail=100 api worker`. Durable audit records, run events and cost reservations are stored separately in PostgreSQL; container logs are not a permanent archive.
+The API/worker emit structured operational logs with safe identifiers, status, duration and error types. Source text, prompts, credentials and URL query strings are excluded. View logs with `docker compose logs -f --tail=100 api worker`. Compose rotates each service's logs at 10 MB with three files; durable audit/events are stored separately in PostgreSQL.
 
-Every live run reserves its budget before provider calls. **Activity** shows a SerpApi/selected-LLM breakdown, attempts, reported input/output tokens and unknown-outcome reservations. The API and evidence exports include the same `costs` object. Rates and selected provider/model are pinned when the run starts; returned LLM usage reconciles the estimate instead of retaining the larger successful-call reservation. Missing usage or uncertain outcomes keep conservative reservations.
+Every run reserves budget before provider calls. **Activity**, the run API and exports show per-provider attempts, input/output tokens, estimated USD and uncertain reservations. Provider/model and rates are pinned at start. Valid reported usage reconciles successful calls; missing usage and unknown outcomes retain conservative reservations.
 
-Configure `SERPAPI_SEARCH_USD`, `LLM_INPUT_USD_PER_MILLION` and `LLM_OUTPUT_USD_PER_MILLION` in `.env`. These are estimates, not verified billing: subscription credits, cached searches, free tiers and account pricing can differ. Check provider dashboards for actual charges. Limits control configured estimates and recorded usage, not an external billing account. See the [operations and cost guide](docs/manual-testing.md#logs-and-cost-accounting).
+Set `SERPAPI_SEARCH_USD`, `LLM_INPUT_USD_PER_MILLION` and `LLM_OUTPUT_USD_PER_MILLION` for your account. These are configured estimates, not verified invoices; subscriptions, caching and free tiers can differ. Check provider dashboards for actual charges. [More accounting details](docs/api-guide.md).
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  R[Researcher / Editor] --> W[React + TypeScript]
-  W --> A[FastAPI workspace API]
-  A --> D[(PostgreSQL: revisions, jobs, reviews)]
-  J[Durable worker] --> D
-  J --> S[SerpApi discovery]
-  J --> F[Public HTTPS source acquisition]
-  F --> P[Private preserved artifacts]
-  J --> L[Groq / NVIDIA proposals]
-  L --> G[Literal, scope, date and quantity guards]
-  G --> D
-  A --> E[Frozen evidence exports]
+  Browser[React workbench] --> API[FastAPI]
+  API --> DB[(PostgreSQL)]
+  Worker[Durable worker] --> DB
+  Worker --> Search[SerpApi discovery]
+  Worker --> Source[Public HTML and PDF records]
+  Source --> Artifacts[Private preserved originals]
+  Worker --> LLM[Selected LLM provider]
+  LLM --> Guards[Literal and scope guards]
+  Guards --> DB
+  API --> Export[Frozen evidence packs]
 ```
 
-A modular application and separate worker keep this release operable without a broker or Kubernetes. PostgreSQL is authoritative; tenant row-level security and bounded dispatch support a restricted runtime role. Artifacts live on a private shared volume. See the [system specification](docs/product-system-spec.md) and [production runbook](docs/runbooks/production.md).
+A modular application and separate worker keep operations simple. PostgreSQL is authoritative; models do not grant editorial authority. See [architecture, persistence and recovery](docs/architecture.md).
 
 ## Develop and verify
 
-Contributors need Python 3.12, Node.js 22 and pnpm 11; Docker users do not need these tools installed locally.
+Contributors need Python 3.12, Node.js 22 and pnpm 11. Install the API with runtime constraints and use the frontend lockfile:
 
-```powershell
-py -3.12 -m venv .venv
-.venv/Scripts/python -m pip install -c infra/requirements-runtime.lock -e '.[dev]'
-.venv/Scripts/python -m alembic upgrade head
+```sh
+python -m pip install -c infra/requirements-runtime.lock -e '.[dev]'
 pnpm --dir apps/web install --frozen-lockfile
-.venv/Scripts/python -m pytest tests -q
-.venv/Scripts/python -m pytest eval/tests -q
-.venv/Scripts/python -m ruff check apps/api tests scripts eval migrations
+python -m pytest tests -q
+python -m pytest eval/tests -q
+python -m ruff check apps/api tests scripts eval migrations
+python -m ruff format --check apps/api tests scripts eval migrations
 pnpm --dir apps/web exec tsc --noEmit
 pnpm --dir apps/web lint
 pnpm --dir apps/web test
 pnpm --dir apps/web build
-.venv/Scripts/python scripts/smoke_fixture.py --base-url http://127.0.0.1:8008
+python scripts/smoke_fixture.py --base-url http://127.0.0.1:8008
 ```
 
-PostgreSQL evaluation tests require a disposable test database via `DATABASE_URL`; skipped checks are not passes. The [development guide](docs/api-guide.md) covers editable API, worker and frontend processes. CI runs regression, lint, types, builds, migrations and an actual API/worker fixture journey. Measured results belong in [release readiness](docs/release-readiness.md), rather than unverified badges.
+PostgreSQL evaluations require a disposable test database via `DATABASE_URL`; skipped checks are not passes. CI checks backend regressions, PostgreSQL evaluations/migrations, frontend types/lint/tests/build, publication safety, and an actual key-free Compose investigation/review/export journey. Provider protocol tests use controlled HTTP responses; real account availability needs live credentials. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Documentation
 
 | Guide | Contents |
 |---|---|
-| [Documentation index](docs/README.md) | Product, engineering and operations references |
-| [API and setup](docs/api-guide.md) | Configuration, authentication, requests and errors |
-| [Manual testing](docs/manual-testing.md) | Judge walkthrough, real-case results, safe logs and provider estimates |
-| [Production deployment](docs/runbooks/production.md) | OIDC, TLS, database privileges, monitoring and release gates |
-| [Backup and recovery](docs/runbooks/backup-restore.md) | Restore procedure, deletion replay and retention |
-| [Evaluation protocol](eval/README.md) | Synthetic regression and independent evaluation requirements |
-| [Hackathon submission](docs/submission-readiness.md) | Judging evidence, recording outline and AI disclosure |
-| [Submission checklist](docs/submission-checklist.md) | Engineering handoff and participant-owned final steps |
-| [Demo script](docs/demo-script.md) | A 2:50 local recording with measured limits and transparent fallback |
-| [Security policy](SECURITY.md) | Private reporting and security boundaries |
-| [Changelog](CHANGELOG.md) | First-release capabilities and limitations |
+| [Architecture](docs/architecture.md) | Components, persistence, security and hosting/recovery |
+| [User flows](docs/user-flows.md) | Real-record and key-free workflows |
+| [API guide](docs/api-guide.md) | Routes, authentication, configuration, errors and costs |
+| [Design](docs/design.md) | Interface hierarchy, components, accessibility and responsive behaviour |
 
 ## Limitations
 
-Public records can be missing, stale or unavailable. Scanned PDFs need OCR, which this release does not provide; tables and partial extraction need inspection. Source families are hypotheses, not proof of independence. Cost estimates depend on configured provider rates. Provider failures and incomplete opposing coverage remain visible as partial results. Synthetic tests do not replace independent adjudication or a newsroom pilot. A human editor remains responsible for any published conclusion.
+Public records can be missing, stale or unavailable. Scanned PDFs require OCR outside this release. Tables, partial extraction and source-family hypotheses need inspection. Provider failures and incomplete opposing coverage remain visible. Synthetic tests do not establish independent accuracy or production capacity. Shared local artifact storage constrains multi-host deployment; public hosting requires further operational preparation.
 
 ## Contributing and license
 
-Follow [CONTRIBUTING.md](CONTRIBUTING.md). Report defects with reproduction steps and keep credentials/private records out of issues. Report security concerns privately as described in [SECURITY.md](SECURITY.md).
+Contributions follow [CONTRIBUTING.md](CONTRIBUTING.md). Keep private records and credentials out of issues; report security concerns through [SECURITY.md](SECURITY.md). See [CHANGELOG.md](CHANGELOG.md) for release changes.
 
-Released under the [MIT License](LICENSE), copyright 2026 Sankalp. Third-party software and captured public records retain their own rights and terms. The demo video link will be added after the participant records and uploads it; no hosted production deployment is claimed.
-
-Built with FastAPI, React, PostgreSQL, SerpApi and selectable Groq/NVIDIA adapters. AI-assisted engineering and synthetic evaluation are disclosed in the [submission guide](docs/submission-readiness.md).
-
-Interface friction fixes, responsive checks and keyboard test steps are documented in the [UI/UX audit](docs/ui-ux-audit.md).
+Released under the [MIT License](LICENSE), copyright 2026 Sankalp. Third-party software and captured records retain their own rights. AI-assisted tools supported development and testing; synthetic evaluation remains labelled. Humans remain responsible for reviewed and published conclusions.

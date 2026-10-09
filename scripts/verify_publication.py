@@ -11,7 +11,7 @@ SECRET = re.compile(
     rb"(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,}|"
     rb"gsk_[A-Za-z0-9]{40,}|sk-[A-Za-z0-9_-]{40,}|"
     rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|"
-    rb"(?:SERPAPI_API_KEY|GROQ_API_KEY|NVIDIA_API_KEY|OIDC_CLIENT_SECRET)"
+    rb"(?:SERPAPI_API_KEY|GROQ_API_KEY|NVIDIA_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|GEMINI_API_KEY|OIDC_CLIENT_SECRET)"
     rb"[\"']?\s*[:=]\s*[\"']?[A-Za-z0-9_-]{24,})"
 )
 LINK = re.compile(r"!?\[[^\]]*\]\(([^\s)]+)(?:\s+[^)]*)?\)")
