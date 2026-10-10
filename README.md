@@ -56,6 +56,12 @@ Only the selected LLM key is needed alongside SerpApi. These are direct provider
 
 `APP_PORT` overrides port 8008. API/database bind loopback. Local identities exercise researcher/editor roles; public hosting requires OIDC and the [hosting prerequisites](docs/architecture.md#hosting-and-recovery). Never delete persistent volumes when retaining cases.
 
+### Your workspace data
+
+A fresh installation starts with an empty case library and local Researcher, Editor and Owner identities. Cases and investigation runs shown in screenshots or demonstrations are not bundled with the repository. Create your own case using either example below; the synthetic example requires no provider keys.
+
+Cases, run history and review records persist in your installation's PostgreSQL volume; preserved originals and exports use a separate artifact volume. Restarting Compose retains them. Another machine has its own workspace and provider configuration. Live search results can change, so repeating a claim may produce different evidence or an incomplete outcome.
+
 ## When to use it
 
 | Use case | Question |
@@ -68,6 +74,22 @@ Only the selected LLM key is needed alongside SerpApi. These are direct provider
 
 ### Try an investigation
 
+**Start without API keys:** create **“Hospital A is operational in District A during September 2026.”** Confirm subject `Hospital A`, geography `District A`, period `2026-09` and stage `OPERATIONAL`. Select **Synthetic fixture · evaluation only**, then inspect the inauguration/operation mismatch, submit a qualified conclusion for review and export the record. This is fictional test data, not a live finding.
+
+### Live walkthrough: inspect an inauguration record
+
+Create **“Atal Setu was inaugurated in Navi Mumbai in January 2024.”** Confirm subject `Atal Setu`, geography `Navi Mumbai`, period `2024-01` and stage `INAUGURATED`. Leave quantity fields blank.
+
+1. In **Add source**, acquire the [official PIB release](https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=1995650&lang=2&reg=48). This is a known source attached manually; its provenance remains visible.
+2. Generate and inspect the research plan. Choose **Live search and original records** with limits of 12 searches, 30 documents, 1 round, 60,000 tokens, 600 seconds and $2 estimated cost. These are ceilings, not promised charges; set provider rates for your account.
+3. Start the investigation, inspect its activity and integrate terminal results into the case. Provider availability and rate limits can affect the outcome.
+4. Inspect the PIB inauguration sentence with **Jump to quotation** and compare its stage, location and period with the claim. A related construction-cost passage does not establish inauguration. Review the actual guarded relations and gaps rather than assuming every collected passage supports the claim.
+5. Write a qualified conclusion citing the inspected passage, submit its frozen revision, switch to Editor for a separate review decision, then export HTML, JSON or Markdown. This demonstrates separate local roles, not an independent external review.
+
+This workflow was exercised end to end with live providers. Its conclusion concerns the collected inauguration record; it does not establish later operation, traffic benefits or expenditure, and repeated searches need not reproduce the same finding.
+
+### Another public-record example
+
 Use the claim **“The Union Cabinet approved PM-Surya Ghar: Muft Bijli Yojana in February 2024.”** Confirm subject `PM-Surya Ghar: Muft Bijli Yojana`, geography `India`, period `2024-02`, stage `APPROVED`; leave quantities blank.
 
 1. Create the case and confirm scope.
@@ -78,7 +100,7 @@ Use the claim **“The Union Cabinet approved PM-Surya Ghar: Muft Bijli Yojana i
 
 Approval does not establish later installations. Search availability and provider limits can leave a partial or insufficient finding; a secondary quotation does not replace primary confirmation. An editor remains accountable for the conclusion.
 
-For a **key-free example**, create the fictional claim **“Hospital A is operational in District A during September 2026.”** Confirm `Hospital A`, `District A`, `2026-09`, `OPERATIONAL`, then select **Synthetic fixture · evaluation only**. Inspect the inauguration/operation mismatch, review and export. See [complete user flows](docs/user-flows.md).
+See [complete user flows](docs/user-flows.md) for research, review and recovery states.
 
 ## Logs and provider costs
 
