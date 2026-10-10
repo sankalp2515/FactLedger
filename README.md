@@ -40,7 +40,7 @@ cd FactLedger
 docker compose up --build -d
 ```
 
-One Compose command builds the frontend, starts PostgreSQL, applies migrations and starts the API and worker. Wait for the API to be healthy in Docker Desktop, then open [localhost:8008](http://127.0.0.1:8008). No local Python or Node installation is needed. **Synthetic fixture mode works without API keys or a `.env` file.**
+One Compose command builds the frontend, starts PostgreSQL, applies migrations and starts the API and worker. Wait for the API to be healthy in Docker Desktop, then open [localhost:8008](http://127.0.0.1:8008) and select **Open workspace**. The homepage introduces the workflow, examples and costs. No local Python or Node installation is needed. **Synthetic fixture mode works without API keys or a `.env` file.**
 
 For live research, copy [.env.example](.env.example) to `.env` once, set a private `SESSION_SECRET`, `SERPAPI_API_KEY`, and one selected LLM provider's key. Set `LLM_PROVIDER` explicitly and leave `LLM_MODEL` blank for its default. Reapply the same startup command after configuration changes. Preserve an existing `.env` and never commit it.
 

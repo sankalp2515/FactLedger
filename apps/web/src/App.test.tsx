@@ -105,7 +105,7 @@ it("offers hosted sign-in when authentication is required", async () => {
         new QueryClient({ defaultOptions: { queries: { retry: false } } })
       }
     >
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/cases"]}>
         <App />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -220,7 +220,7 @@ it("exposes an unavailable API with a retry action instead of a fixture result",
         new QueryClient({ defaultOptions: { queries: { retry: false } } })
       }
     >
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/cases"]}>
         <App />
       </MemoryRouter>
     </QueryClientProvider>,

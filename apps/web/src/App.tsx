@@ -44,6 +44,7 @@ import { createPortal } from "react-dom";
 import { EvidenceComparison } from "./EvidenceComparison";
 import { SourceFamilies } from "./SourceFamilies";
 import { scopeInput } from "./scope";
+import { LandingPage } from "./LandingPage";
 import type {
   Session,
   CaseItem,
@@ -183,6 +184,14 @@ function CommandState({
   );
 }
 export function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/*" element={<WorkspaceApp />} />
+    </Routes>
+  );
+}
+function WorkspaceApp() {
   const session = useQuery({
     queryKey: ["session"],
     queryFn: () => api.get<Session>("/session"),

@@ -25,3 +25,21 @@ An evidence card presents the relation, literal quotation, source identity and c
 ![Mobile workbench](assets/ui-workbench-mobile.png)
 
 These screenshots document an earlier live walkthrough with a manually attached PIB record. They are examples of the interface, not a guarantee of future search results or provider availability.
+
+## Public landing page
+
+The root route introduces FactLedger without requiring a session or an API request. **Open workspace** enters the existing case library; direct investigation and editorial links keep their existing behavior. The landing page uses scoped styles, an editorial serif headline, a restrained green accent and responsive grids. The workbench retains its task-focused layout.
+
+| Section | Decision it supports |
+| --- | --- |
+| Hero and evidence-trail illustration | Identifies researchers and editors, states the inspectable outcome and offers a clear next action. |
+| Verifiable foundations | Links source code, automated checks and evidence guards instead of inventing customer logos or testimonials. |
+| Interactive stage comparison | Lets visitors experience the distinction between inauguration and operation before starting a case. The record is explicitly synthetic. |
+| Four-step workflow | Explains the effort required and how SerpApi discovery connects to inspection and editorial review. |
+| Features and benefits | Connects preserved quotations, scoped comparisons and visible usage to practical research decisions. |
+| Worked examples | Provides a real public-record scenario and a synthetic practice scenario, with explicit provenance and limitations. These are not customer case studies. |
+| Cost presentation | Separates the MIT-licensed application from provider usage and hosting costs; it does not imply a managed subscription. |
+| Expandable FAQs | Addresses evidence limits, provider keys, reproducibility and hosting without making the page an expanded manual. |
+| Closing action and footer | Offers entry to the workspace, source code and public guidance after visitors have assessed the product. |
+
+Native disclosure controls and stage buttons support keyboard interaction; the comparison announces its result through a status region. Narrow screens stack the main sections and preserve the workspace action. No decorative animation or autoplay media is required. This design aims to reduce uncertainty; conversion gains have not been measured through an experiment.
