@@ -21,6 +21,8 @@ Review submission freezes the revision and human conclusion/citations. Each revi
 
 Errors have `{code,message,request_id,details}`. Common codes: AUTH_REQUIRED401, FORBIDDEN403, NOT_FOUND404, REVISION_CONFLICT/REVIEW_SUPERSEDED/INVALID_STATE409, INVALID_SCOPE422, RATE_LIMITED/BUDGET_EXCEEDED/STORAGE_LIMIT_EXCEEDED429. Provider failures and exhausted bounds can produce PARTIAL with preserved useful records. Unknown invocation outcomes retain conservative budget reservations. Never reset them merely to retry a paid action.
 
+Model HTTP 429 responses are explicit request rejections. The worker respects `Retry-After` with at most two retries and 60 seconds of total waiting, within the remaining run time and with cancellation checks. Rejected requests release token and estimated-cost reservations; network timeouts retain them and are not blindly retried. Retry waits are recorded as `MODEL_RATE_LIMIT_WAIT` events. If the provider remains unavailable, partial results and actionable guidance stay visible. Raising a token budget or replacing a key does not remove an account's rate limits.
+
 ## Environment and setup
 
 Run the full local stack from the repository root with `docker compose up --build -d`. Docker Compose 2.24+ handles the root include and optional `.env`; no provider keys are required for fixtures. See [user flows](user-flows.md) for real-record and key-free examples.
@@ -40,6 +42,10 @@ Use the root README and `.env.example`; preserve existing `.env`. SerpApi plus o
 For OpenAI, for example, set `LLM_PROVIDER=openai`, `OPENAI_API_KEY` and `SERPAPI_API_KEY`; leave `LLM_MODEL` blank or set `gpt-4.1-mini`. Other LLM keys can stay empty. Keys must belong to the selected provider's direct API; Azure OpenAI, Vertex AI and Bedrock endpoints are not supported. Model availability, permissions and quotas depend on the account. There is no automatic fallback to another provider.
 
 All proposals pass the same local JSON, literal-quotation and scope guards. Refused, truncated or malformed responses do not become evidence. Gemini 2.5 Flash thinking is disabled by default; reported thought tokens still count toward output usage. Anthropic cache input tokens are conservatively included at the configured input rate. Only compatible text-generation models are supported; changing to an arbitrary model does not guarantee compatible parameters or useful extraction.
+
+Extraction uses up to 8,000 characters of verbatim source windows, prioritizing the opening and regions around the confirmed subject. Original offsets, selected ranges and truncation are recorded; the full preserved text remains available for inspection and quotation validation. Unselected material is an extraction limitation, not evidence that a fact is absent. This keeps individual requests and conservative reservations manageable across multiple records.
+
+Groq GPT-OSS 20B/120B requests use the provider's supported strict JSON schema and low reasoning effort for bounded extraction. Other model/provider protocols retain their compatible structured-output configuration. The prompt requests at most four distinct passages per record; local literal anchors, scope checks and editorial permissions remain authoritative regardless of provider schema guarantees.
 
 Configure `LLM_INPUT_USD_PER_MILLION` and `LLM_OUTPUT_USD_PER_MILLION` for the selected provider/model/account before live calls. The example rates are illustrative, not universal model prices. Rates, workspace daily/storage limits and maximum duration are server configuration. Production also needs PostgreSQL, a private SESSION_SECRET, exact OIDC issuer/client/workspace, HTTPS PUBLIC_URL and ALLOWED_HOSTS. See [hosting and recovery](architecture.md#hosting-and-recovery) for maintenance-only provisioning and tenant-scoped worker dispatch.
 

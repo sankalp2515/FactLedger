@@ -14,6 +14,8 @@
 - Structured operational logs and pinned provider pricing with reported token reconciliation and visible uncertain reservations.
 - Search selection balances relevance, public-record cues, opposing discovery and source diversity; URL identity preserves meaningful query ordering.
 - Bounded extraction retains relevant regions of long records and discloses omitted material.
+- Model rate limits use bounded, cancellable `Retry-After` waits; explicitly rejected requests release reservations while uncertain network outcomes remain accounted for.
+- Compact literal extraction windows reduce per-request reservations; incomplete-run notices explain recovery and retain technical diagnostics.
 - One-command, key-free Docker fixture startup, clean-stack CI, publication checks and MIT licensing.
 
 See [hosting and recovery](docs/architecture.md#hosting-and-recovery) for deployment requirements and [user flows](docs/user-flows.md) for usage.

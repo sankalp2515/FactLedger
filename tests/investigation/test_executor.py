@@ -223,7 +223,7 @@ def test_manual_source_requires_opposing_discovery_when_budget_available(
 
     monkeypatch.setenv("SERPAPI_API_KEY", "test-only")
     monkeypatch.setenv("GROQ_API_KEY", "test-only")
-    monkeypatch.setattr(executor, "StructuredModel", lambda *args: Model())
+    monkeypatch.setattr(executor, "StructuredModel", lambda *args, **kwargs: Model())
     monkeypatch.setattr(executor, "SerpApiSearch", lambda _: Search())
     monkeypatch.setattr(executor, "acquire", lambda _: pytest.fail("manual record must not refetch"))
     executor.execute_run("run")
@@ -316,7 +316,7 @@ def test_live_document_budget_inspects_buried_primary_and_opposing(database, mon
     monkeypatch.setenv("SERPAPI_API_KEY", "test-only")
     monkeypatch.setenv("GROQ_API_KEY", "test-only")
     monkeypatch.setattr(executor, "SerpApiSearch", lambda _: Search())
-    monkeypatch.setattr(executor, "StructuredModel", lambda *args: Model())
+    monkeypatch.setattr(executor, "StructuredModel", lambda *args, **kwargs: Model())
     monkeypatch.setattr(executor, "acquire", acquire)
     with database.begin() as s:
         run = s.get(Run, "run")
@@ -361,7 +361,7 @@ def test_tracking_alias_in_later_round_reuses_acquired_source(database, monkeypa
     monkeypatch.setenv("SERPAPI_API_KEY", "test-only")
     monkeypatch.setenv("GROQ_API_KEY", "test-only")
     monkeypatch.setattr(executor, "SerpApiSearch", lambda _: Search())
-    monkeypatch.setattr(executor, "StructuredModel", lambda *args: Model())
+    monkeypatch.setattr(executor, "StructuredModel", lambda *args, **kwargs: Model())
     monkeypatch.setattr(executor, "acquire", acquire)
     with database.begin() as s:
         run = s.get(Run, "run")
@@ -372,3 +372,39 @@ def test_tracking_alias_in_later_round_reuses_acquired_source(database, monkeypa
     with database() as s:
         assert s.get(Run, "run").usage["documents"] == 1
         assert len(s.get(Run, "run").results["sources"]) == 1
+
+
+def test_explicit_model_rate_limit_rejection_releases_tokens_and_cost(database):
+    from product_core.investigation.model import ModelError
+
+    lease = executor.claim_run("run", "owner")
+
+    def rejected():
+        raise ModelError("MODEL_PROVIDER_HTTP_429")
+
+    with pytest.raises(ValueError, match="MODEL_PROVIDER_HTTP_429"):
+        executor._action(lease, "extract:limited", {"tokens": 16000, "usd": 0.01}, rejected)
+    with database() as s:
+        run = s.get(Run, "run")
+        assert run.usage["tokens"] == 0
+        assert run.usage["usd"] == 0
+        assert run.checkpoint["actions"]["extract:limited"]["state"] == "FAILED"
+
+
+def test_rate_limit_wait_respects_remaining_run_time(database):
+    lease = executor.claim_run("run", "owner")
+    with database.begin() as s:
+        run = s.get(Run, "run")
+        run.budget = dict(run.budget, seconds=10)
+    with pytest.raises(executor.BudgetExceeded, match="seconds"):
+        executor._wait_for_rate_limit(lease, 20, 1)
+
+
+def test_rate_limit_wait_obeys_cancel_without_sleeping(database):
+    lease = executor.claim_run("run", "owner")
+    with database.begin() as s:
+        s.get(Run, "run").state = "CANCEL_REQUESTED"
+    with pytest.raises(executor.StopRequested):
+        executor._wait_for_rate_limit(lease, 20, 1)
+    with database() as s:
+        assert s.get(Run, "run").state == "CANCELLED"

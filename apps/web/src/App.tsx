@@ -39,6 +39,7 @@ import {
 import { api, ApiError } from "./api";
 import { AnchorText } from "./AnchorText";
 import { BudgetFields, validBudget } from "./BudgetFields";
+import { RunStatusNotice } from "./RunStatusNotice";
 import { PagedList } from "./PagedList";
 import { createPortal } from "react-dom";
 import { EvidenceComparison } from "./EvidenceComparison";
@@ -2043,7 +2044,7 @@ function Activity({ run }: { run?: Run | null }) {
   return (
     <>
       <h2>Investigation activity</h2>
-      {run.error && <p className="notice">{run.error}</p>}
+      {run.error && <RunStatusNotice error={run.error} />}
       <div className="budget-grid">
         {Object.entries(run.budget ?? {}).map(([k, v]) => (
           <div key={k}>

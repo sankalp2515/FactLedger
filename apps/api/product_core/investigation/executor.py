@@ -3,6 +3,7 @@
 import json
 import re
 import threading
+import time
 from copy import deepcopy
 from hashlib import sha256
 from pathlib import Path
@@ -117,11 +118,25 @@ def _action(lease, key, amount, call):
         result = call()
     except (Fenced, StopRequested):
         raise
+    except BudgetExceeded:
+        # The retry wait checks time only after an explicit rate-limit rejection.
+        leases.settle(
+            SessionLocal,
+            lease,
+            key,
+            {"error": "MODEL_RATE_LIMIT_WAIT_BUDGET"},
+            failed=True,
+            actual={name: 0 for name in ("tokens", "usd") if name in amount},
+        )
+        raise
     except Exception as exc:  # noqa: BLE001 -- Adapter failures become bounded safe durable outcomes.
         code = _safe_provider_error(exc)
-        rejected = code.endswith(("_HTTP_400", "_HTTP_401", "_HTTP_403", "_HTTP_422"))
+        rate_limited = code.endswith("_HTTP_429")
+        rejected = rate_limited or code.endswith(("_HTTP_400", "_HTTP_401", "_HTTP_403", "_HTTP_422"))
         advice = (
-            "Check the server provider credentials and request configuration."
+            "Wait for the provider rate limit to reset, or use an account with sufficient request capacity. Rejected requests have no token or cost charge."
+            if rate_limited
+            else "Check the server provider credentials and request configuration."
             if rejected
             else "Check provider availability, network access or rate limits; existing reservations and records are retained."
         )
@@ -145,6 +160,29 @@ def _action(lease, key, amount, call):
         return None
     leases.settle(SessionLocal, lease, key, result)
     return result
+
+
+def _wait_for_rate_limit(lease, seconds, attempt):
+    """Wait only after a known rejection; remain cancellable and within the run deadline."""
+    if _stop(lease):
+        raise StopRequested("STOPPED")
+
+    def record(session, run):
+        remaining = float(run.budget.get("seconds", 0)) - float(run.usage.get("seconds", 0))
+        if seconds + 25 > remaining:
+            raise BudgetExceeded("seconds")
+        leases.event(session, run, "MODEL_RATE_LIMIT_WAIT", {"seconds": seconds, "retry": attempt})
+
+    update_run(lease, record)
+    deadline = time.monotonic() + seconds
+    while True:
+        if _stop(lease):
+            raise StopRequested("STOPPED")
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        time.sleep(min(1, remaining))
+    update_run(lease, lambda session, run: None)
 
 
 def _recover(lease):
@@ -550,7 +588,12 @@ def execute_run(run_id: str, workspace_id: str | None = None) -> None:
             if not settings.serpapi_api_key.get_secret_value() or not key.get_secret_value():
                 raise ValueError("LIVE_PROVIDERS_NOT_CONFIGURED")
             search = SerpApiSearch(settings.serpapi_api_key.get_secret_value())
-            model = StructuredModel(provider, key.get_secret_value(), model_name)
+            model = StructuredModel(
+                provider,
+                key.get_secret_value(),
+                model_name,
+                on_rate_limit=lambda seconds, attempt: _wait_for_rate_limit(lease, seconds, attempt),
+            )
         for source in snapshot["results"]["sources"]:
             if source.get("manual") and source["status"] == "ACQUIRED":
                 _action(

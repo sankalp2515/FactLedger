@@ -88,7 +88,9 @@ def test_provider_failure_is_safe(provider):
         provider,
         "private-test-key",
         "test",
-        transport=httpx.MockTransport(lambda _: httpx.Response(429, text="private-test-key")),
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(429, headers={"retry-after": "120"}, text="private-test-key")
+        ),
     )
     with pytest.raises(ModelError, match="^MODEL_PROVIDER_HTTP_429$"):
         model.extract({}, {"id": "s", "text": "Exact"})
